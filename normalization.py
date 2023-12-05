@@ -1,7 +1,10 @@
-import tensorflow as tf
+import jax.numpy as jnp
 
-def NormalizeData(X, max=1, min=0):
+def NormalizeData(X, min=0, max=1):
+    
     ### data normalization between 0-1
-    X_std = (X - tf.math.reduce_min(X)) / (tf.math.reduce_max(X) - tf.math.reduce_min(X))
+    
+    X_std = (X - jnp.min(X)) / (jnp.max(X) - jnp.min(X))
     X_scaled = X_std * (max - min) + min
+    
     return X_scaled
