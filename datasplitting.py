@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 from normalization import NormalizeData
-from tensorflow.keras.utils import to_categorical
+from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
 seed=11
 
