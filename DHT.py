@@ -1,0 +1,17 @@
+import jax.numpy as jnp
+from jax.numpy.fft import fft
+
+
+def DHT(data):
+    """
+    _Discrete Hartley Transform_
+        This function implements the DHT based on the Real and Imaginary parts of the DFT.
+    """    
+        
+    fourier_data = fft(data, axis=1)
+    hartley_data = jnp.real(fourier_data) - jnp.imag(fourier_data)
+
+    # implement normalization if needed
+    norm_hartley = jnp.abs(hartley_data)
+    
+    return norm_hartley.at[:,:data.shape[1]//2].get() / (data.shape[1]) # /data.shape[1] #data.shape[1]//2
