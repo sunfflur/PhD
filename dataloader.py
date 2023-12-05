@@ -5,7 +5,7 @@ seed=11
 
 
 
-def dataloader(subject, electrode, stimulus_frequency, sampling_frequency, trial, path):
+def dataloader(subject, electrode, stimulus_frequency, trial, path):
   #escolha do sujeito cujos dados vamos processar/analisar
   suj = subject
   filename = "S" + str(suj) + ".mat"
