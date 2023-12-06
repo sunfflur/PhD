@@ -1,11 +1,13 @@
 import numpy as np
+import os
 from flax import linen as nn
 from dataloader import dataloader
 from plots import hartley_fourier
 datapath = '/content/drive/MyDrive/Doutorado/Dados/Tsinghua BCI Lab - Benchmark Dataset/'
 #datapath = 'g:\Meu Drive\Doutorado\Dados\Tsinghua BCI Lab - Benchmark Dataset'
 #datapath = '/home/natalia/'
-
+datapath = '/run/user/1002/gvfs/google-drive:host=dac.unicamp.br,user=n232881/0AMgULXMB0MAlUk9PVA/1d4-2xyAIuuocPDNEC50Tzt8tSkNnZsNC/1BEjbn5jRzSNXfQaIyMbbqK-Gg-CEuDh4/'
+print(os.path.isdir('/run/user/1002/gvfs/google-drive:host=dac.unicamp.br,user=n232881/0AMgULXMB0MAlUk9PVA/1d4-2xyAIuuocPDNEC50Tzt8tSkNnZsNC/1BEjbn5jRzSNXfQaIyMbbqK-Gg-CEuDh4/'))
 # loading
 
 """
