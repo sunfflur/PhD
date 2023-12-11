@@ -3,12 +3,11 @@ import os
 from flax import linen as nn
 from dataloader import dataloader
 from plots import hartley_fourier
-datapath = '/content/drive/MyDrive/Doutorado/Dados/Tsinghua BCI Lab - Benchmark Dataset/'
-#datapath = 'g:\Meu Drive\Doutorado\Dados\Tsinghua BCI Lab - Benchmark Dataset'
-#datapath = '/home/natalia/'
-datapath = '/run/user/1002/gvfs/google-drive:host=dac.unicamp.br,user=n232881/0AMgULXMB0MAlUk9PVA/1d4-2xyAIuuocPDNEC50Tzt8tSkNnZsNC/1BEjbn5jRzSNXfQaIyMbbqK-Gg-CEuDh4/'
-print(os.path.isdir('/run/user/1002/gvfs/google-drive:host=dac.unicamp.br,user=n232881/0AMgULXMB0MAlUk9PVA/1d4-2xyAIuuocPDNEC50Tzt8tSkNnZsNC/1BEjbn5jRzSNXfQaIyMbbqK-Gg-CEuDh4/'))
-# loading
+from slicing import slicing 
+
+# define the file path for the original data
+datapath = '/home/natalia/Documentos/Dados/Tsinghua BCI Lab - Benchmark Dataset/'
+
 
 """
     Load data from from different stimulus frequency: 8, 10, 12 and 15 Hertz and
@@ -16,13 +15,31 @@ print(os.path.isdir('/run/user/1002/gvfs/google-drive:host=dac.unicamp.br,user=n
     following Vargas et. al (2022).
 
 """
+
+sel_electrodes = {60:'O1', 61:'Oz', 62:'O2', 55:'POz', 47:'Pz', 54:'PO3', 56:'PO4', 52:'PO7',
+              58:'PO8', 46:'P1', 48:'P2', 27:'Cz', 26:'C1', 28:'C2', 37:'CPZ', 18:'FCz'}
 stimulif = [8,10,12,15]
-input_signal15, labels15 = dataloader(subject=1, electrode=False, stimulus_frequency=stimulif, trial=False, path=datapath)
-input_signal10, labels10 = dataloader(subject=1, electrode=False, stimulus_frequency=10, trial=False, path=datapath)
 
-# plotting
-sinal_teste, labels = dataloader(subject=1, electrode=61, stimulus_frequency=15, trial=1, path=datapath)
-hartley_fourier(signal=np.reshape(sinal_teste, (1000)), stimulus_frequency=15, sampling_frequency=250)
+eegdata, eeglabels = dataloader(subject=1, electrode=sel_electrodes, stimulus_frequency=stimulif, trial=False, path=datapath)
 
-input10, l10 = dataloader(subject=1, electrode=61, stimulus_frequency=10, trial=1, path=datapath)
+
+"""
+    Plotting examples from stimulus frequency of 15Hz and 10Hz for one subject, electrode and one random trial.
+    
+"""
+
+input15, l15 = dataloader(subject=1, electrode=61, stimulus_frequency=[15], trial=1, path=datapath)
+hartley_fourier(signal=np.reshape(input15, (1000)), stimulus_frequency=15, sampling_frequency=250)
+
+input10, l10 = dataloader(subject=1, electrode=61, stimulus_frequency=[10], trial=1, path=datapath)
 hartley_fourier(signal=np.reshape(input10, (1000)), stimulus_frequency=10, sampling_frequency=250)
+
+"""
+    _Slicing Function_
+    
+    Here we split the original EEG data into several blocks (vectors) of the same shape according to the number of levels defined.
+    That means, e.g., 2 levels of slicing will return 5 blocks: the original array + the original array sliced into 4 equaly sized arrays.
+
+"""
+
+eegdata_sliced = slicing()

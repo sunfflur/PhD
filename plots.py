@@ -24,7 +24,7 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
   # Calculate the magnitude spectrum (absolute values of the Fourier coefficients)
   #magnitude_spectrum0 = filtro_CAR(jnp.abs(fft_signal))
   magnitude_spectrum0 = jnp.abs(fft_signal)
-  print(magnitude_spectrum0[:sampling_frequency//2].shape)
+  #print(magnitude_spectrum0[:sampling_frequency//2].shape)
 
   # Calculate the Hartley transform from the real and imaginary parts of the Fourier transform
   hartley_transform0 = jnp.real(fft_signal) - jnp.imag(fft_signal)
