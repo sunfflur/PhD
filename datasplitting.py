@@ -44,12 +44,14 @@ def splitting_v2(data1, labels1, data2, labels2):
   return tf.stack(x_train), tf.stack(x_test), to_categorical(y_train), to_categorical(y_test)
   """
   
-def splitting(data, labels, test_size):
+def splitting(data, labels, test_size, val_size):
   X = data.reshape((data.shape[0]*data.shape[2], data.shape[1]))
   y = labels.reshape((labels.shape[0]*labels.shape[1]))
   
-  x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=seed, shuffle=True, stratify=y)
-  return x_train, x_test, to_categorical(y_train, n_classes=4), to_categorical(y_test, n_classes=4)
+  xx_train, x_test, yy_train, y_test = train_test_split(X, y, test_size=test_size, random_state=seed, shuffle=True, stratify=y)
+  x_train, x_val, y_train, y_val = train_test_split(xx_train, yy_train, test_size=val_size, shuffle=True, stratify=yy_train)
+  
+  return x_train, x_val, x_test, to_categorical(y_train, n_classes=4), to_categorical(y_val, n_classes=4), to_categorical(y_test, n_classes=4)
 
 
 def shuffling(x_train, y_train, x_test, y_test):

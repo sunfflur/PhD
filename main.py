@@ -47,8 +47,13 @@ eegdata, eeglabels = dataloader(subject=1, electrode=sel_electrodes, stimulus_fr
 processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels, n_levels=2, band_width=1)
 print(processed_data.shape, processed_labels.shape)
 
+""" 
 
-x_train, x_test, y_train, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30)
+    _Data Splitting_
+    
+    Splits the data into train and test sets using sklearn train_test_plit function.
+    Here we take care of shuffling the data and stratify according to the labels set.
+    
+"""
 
-
-
+x_train, x_val, x_test, y_train, y_val, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30, val_size=0.10)
