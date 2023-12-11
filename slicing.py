@@ -1,6 +1,15 @@
 # divisão em blocos
 
 def dataslicing(data, levels=int):
+  """
+  
+    _Slicing Function_
+        
+    Here we split the original EEG data into several blocks (vectors) of the same shape according to the number of levels defined.
+    That means, e.g., 2 levels of slicing will return 5 blocks: the original array + the original array sliced into 4 equaly sized arrays.
+
+  """
+
   snl = data
   niveis = levels
   N = snl.shape[1]
