@@ -3,9 +3,9 @@ import os
 from flax import linen as nn
 from dataloader import dataloader
 from plots import hartley_fourier
-from slicing import dataslicing
-from pooling import datapooling
-from DHT import dataDHT
+from preprocessing import dataprocessing
+#from datasplitting import splitting
+
 
 # define the file path for the original data
 datapath = '/home/natalia/Documentos/Dados/Tsinghua BCI Lab - Benchmark Dataset/'
@@ -36,34 +36,19 @@ eegdata, eeglabels = dataloader(subject=1, electrode=sel_electrodes, stimulus_fr
 # input10, l10 = dataloader(subject=1, electrode=61, stimulus_frequency=[10], trial=1, path=datapath)
 # hartley_fourier(signal=np.reshape(input10, (1000)), stimulus_frequency=10, sampling_frequency=250)
 
-"""
-    _Slicing Function_
+""" 
+
+    _Data Processing_
     
-    Here we split the original EEG data into several blocks (vectors) of the same shape according to the number of levels defined.
-    That means, e.g., 2 levels of slicing will return 5 blocks: the original array + the original array sliced into 4 equaly sized arrays.
-
-"""
-
-eegdata_sliced = dataslicing(data=eegdata, levels=2)
-
-
-"""
-    _Discrete Hartley Transform_
-    
-    Here we perform the DHT based on the relationship it has with the DFT.
+    Implements the first 3 stages of the methodology: 
+    Slicing into blocks, 1D-DHT and pooling.
     
 """
+processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels, n_levels=2, band_width=1)
+print(processed_data.shape, processed_labels.shape)
 
-"""
-    _Frequency Pooling_
 
-    Here we perform the frequency pooling stage, wich means the data is grouped according to the frequency band width chosen.
-    The minimun value here is 1.
-    
-"""
+#x_train, x_test, y_train, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30)
 
-grouped = []
-for block in range(len(eegdata_sliced)):
-    dhtdata = dataDHT(eegdata_sliced)
-    grouped.append(datapooling(dhtdata[block], axis=1, width=1))
-grouped = np.concatenate(grouped, axis=1)
+
+

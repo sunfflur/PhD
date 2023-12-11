@@ -1,6 +1,12 @@
 import jax.numpy as jnp
 
-# Agrupamento
+"""
+    _Frequency Pooling_
+
+    Here we perform the frequency pooling stage, wich means the data is grouped according to the frequency band width chosen.
+    The minimun value here is 1.
+        
+"""
 
 def datapooling(data, axis, width):
   steps = jnp.array(range(width, data.shape[1]+1, width))

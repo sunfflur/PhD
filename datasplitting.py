@@ -26,6 +26,8 @@ def splitting(data1, labels1, data2, labels2):
   y_test = to_categorical(jnp.where(y_test == 15 , 1, 0))
   return x_train, y_train, x_test, y_test
 
+
+
 def splitting_v2(data1, labels1, data2, labels2):
   # put both classes together
   dht_data = jnp.array(NormalizeData(jnp.concatenate((data1, data2))))
@@ -40,6 +42,14 @@ def splitting_v2(data1, labels1, data2, labels2):
   x_train, x_test, y_train, y_test  = train_test_split(X, y, test_size=0.30, random_state=seed, shuffle=True, stratify=y)
 
   return tf.stack(x_train), tf.stack(x_test), to_categorical(y_train), to_categorical(y_test)
+
+def splitting(data, labels, test_size):
+  X = data.reshape((data.shape[0]*data.shape[2], data.shape[1]))
+  y = labels.reshape((data.shape[0]*data.shape[1]))
+  
+  x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=seed, shuffle=True, stratify=y)
+  return x_train, x_test, to_categorical(y_train), to_categorical(y_test)
+
 
 def shuffling(x_train, y_train, x_test, y_test):
   idx_train = jax.random.permutation(jax.random.PRNGKey(seed), x_train.shape[0])

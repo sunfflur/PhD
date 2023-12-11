@@ -4,8 +4,10 @@ from jax.numpy.fft import fft
 
 def dataDHT(data):
     """
-    _Discrete Hartley Transform_
+    
+        _Discrete Hartley Transform_
         This function implements the DHT based on the Real and Imaginary parts of the DFT.
+        
     """    
         
     fourier_data = fft(data, axis=1)
