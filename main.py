@@ -4,7 +4,7 @@ from flax import linen as nn
 from dataloader import dataloader
 from plots import hartley_fourier
 from preprocessing import dataprocessing
-#from datasplitting import splitting
+from datasplitting import splitting
 
 
 # define the file path for the original data
@@ -48,7 +48,7 @@ processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels
 print(processed_data.shape, processed_labels.shape)
 
 
-#x_train, x_test, y_train, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30)
+x_train, x_test, y_train, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30)
 
 
 
