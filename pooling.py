@@ -2,7 +2,7 @@ import jax.numpy as jnp
 
 # Agrupamento
 
-def pooling(data, axis, width):
+def datapooling(data, axis, width):
   steps = jnp.array(range(width, data.shape[1]+1, width))
   p = []
   for i in steps:

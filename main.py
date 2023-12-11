@@ -3,7 +3,9 @@ import os
 from flax import linen as nn
 from dataloader import dataloader
 from plots import hartley_fourier
-from slicing import slicing 
+from slicing import dataslicing
+from pooling import datapooling
+from DHT import dataDHT
 
 # define the file path for the original data
 datapath = '/home/natalia/Documentos/Dados/Tsinghua BCI Lab - Benchmark Dataset/'
@@ -28,11 +30,11 @@ eegdata, eeglabels = dataloader(subject=1, electrode=sel_electrodes, stimulus_fr
     
 """
 
-input15, l15 = dataloader(subject=1, electrode=61, stimulus_frequency=[15], trial=1, path=datapath)
-hartley_fourier(signal=np.reshape(input15, (1000)), stimulus_frequency=15, sampling_frequency=250)
+# input15, l15 = dataloader(subject=1, electrode=61, stimulus_frequency=[15], trial=1, path=datapath)
+# hartley_fourier(signal=np.reshape(input15, (1000)), stimulus_frequency=15, sampling_frequency=250)
 
-input10, l10 = dataloader(subject=1, electrode=61, stimulus_frequency=[10], trial=1, path=datapath)
-hartley_fourier(signal=np.reshape(input10, (1000)), stimulus_frequency=10, sampling_frequency=250)
+# input10, l10 = dataloader(subject=1, electrode=61, stimulus_frequency=[10], trial=1, path=datapath)
+# hartley_fourier(signal=np.reshape(input10, (1000)), stimulus_frequency=10, sampling_frequency=250)
 
 """
     _Slicing Function_
@@ -42,4 +44,26 @@ hartley_fourier(signal=np.reshape(input10, (1000)), stimulus_frequency=10, sampl
 
 """
 
-eegdata_sliced = slicing()
+eegdata_sliced = dataslicing(data=eegdata, levels=2)
+
+
+"""
+    _Discrete Hartley Transform_
+    
+    Here we perform the DHT based on the relationship it has with the DFT.
+    
+"""
+
+"""
+    _Frequency Pooling_
+
+    Here we perform the frequency pooling stage, wich means the data is grouped according to the frequency band width chosen.
+    The minimun value here is 1.
+    
+"""
+
+grouped = []
+for block in range(len(eegdata_sliced)):
+    dhtdata = dataDHT(eegdata_sliced)
+    grouped.append(datapooling(dhtdata[block], axis=1, width=1))
+grouped = np.concatenate(grouped, axis=1)
