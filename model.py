@@ -53,16 +53,16 @@ model = SimpleClassifier(num_hidden=8, num_outputs=4)
 # Printing the model shows its attributes
 print(model)
 
-params = model.init(rng, jnp.ones((10, 1000)))  # Initialize with a dummy input shape (10, 1000)
+params = model.init(rng, jnp.ones((10, 1000)))  
 #print(params)
 
 optimizer = optax.sgd(learning_rate=0.01)
 opt_state = optimizer.init(params["params"])
 
-# Define the loss function
+# Define the loss and acc functions
 def loss(params, batch):
     inputs, labels = batch
-    logits = model.apply(params, inputs)  # Change here: pass params directly without {'params': ...}
+    logits = model.apply(params, inputs)  
     return -jnp.mean(jnp.sum(logits * labels, axis=-1))
 
 def accuracy(params, inputs, targets):
@@ -84,12 +84,15 @@ def update(params, opt_state, batch):
     new_params = optax.apply_updates(params, updates)
     return new_params, new_opt_state
 
-# Generate synthetic data for demonstration purposes
-# Replace this with your actual training data
+# Training data
 train_data = x_train
 train_labels = y_train
 validation_data = x_val
 validation_labels = y_val
+
+# Test data
+# test_data = x_test
+# test_labels = y_test
 
 # Training loop
 batch_size = 10
