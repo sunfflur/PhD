@@ -4,7 +4,7 @@ from flax import linen as nn
 import optax
 from main import x_train, x_val, x_test, y_train, y_val, y_test  # Assuming these are your data
 import subprocess
-XLA_PYTHON_CLIENT_PREALLOCATE=False
+#XLA_PYTHON_CLIENT_PREALLOCATE=False
 
 # Specify GPU device
 gpu_devices = jax.devices("gpu")
@@ -21,6 +21,7 @@ def get_gpu_memory_info():
 
     for line in output:
         free_memory, used_memory = map(int, line.split(','))
+        
         print(f"Free GPU Memory: {free_memory} MiB")
         print(f"Used GPU Memory: {used_memory} MiB")
 
@@ -53,7 +54,7 @@ model = SimpleClassifier(num_hidden=8, num_outputs=4)
 print(model)
 
 params = model.init(rng, jnp.ones((10, 1000)))  # Initialize with a dummy input shape (10, 1000)
-print(params)
+#print(params)
 
 optimizer = optax.sgd(learning_rate=0.01)
 opt_state = optimizer.init(params["params"])
