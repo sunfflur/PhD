@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 from flax import linen as nn
 import optax
-from main import x_train, x_val, x_test, y_train, y_val, y_test  # Assuming these are your data
+from main import x_train, x_val, x_test, y_train, y_val, y_test # data
 import subprocess
 #XLA_PYTHON_CLIENT_PREALLOCATE=False
 
@@ -42,15 +42,16 @@ class SimpleClassifier(nn.Module):
         # while defining necessary layers
         x = nn.Dense(features=self.num_hidden)(x)
         x = nn.relu(x)
+        x = nn.Dense(features=self.num_hidden)(x)
+        x = nn.relu(x)
         x = nn.Dense(features=self.num_outputs)(x)
         x = nn.log_softmax(x)
         return x
 
 
-# Initialize the model and optimizer
+# Initialize the model params and optimizer
 rng = jax.random.PRNGKey(device)
-model = SimpleClassifier(num_hidden=8, num_outputs=4)
-# Printing the model shows its attributes
+model = SimpleClassifier(num_hidden=16, num_outputs=4)
 print(model)
 
 params = model.init(rng, jnp.ones((10, 1000)))  
@@ -65,8 +66,8 @@ def loss(params, batch):
     logits = model.apply(params, inputs)  
     return -jnp.mean(jnp.sum(logits * labels, axis=-1))
 
-def accuracy(params, inputs, targets):
-
+def accuracy(params, batch):
+    inputs, targets = batch
     logits = model.apply(params, inputs)
     predicted_labels = jnp.argmax(logits, axis=-1)
     #print('predicted:', predicted_labels)
@@ -96,9 +97,9 @@ validation_labels = y_val
 
 # Training loop
 batch_size = 10
-num_epochs = 10
+num_epochs = 500
 num_batches = train_data.shape[0] // batch_size
-validation_interval = 10  # Validate every 10 epochs, adjust as needed
+validation_interval = 5  # Validate every 10 epochs
 
 for epoch in range(num_epochs):
     rng, subkey = jax.random.split(rng)
@@ -112,13 +113,14 @@ for epoch in range(num_epochs):
 
     # Calculate and print training loss and accuracy at the end of each epoch
     train_loss = loss(params, (train_data, train_labels))
-    train_accuracy = accuracy(params, train_data, train_labels)
+    train_accuracy = accuracy(params, (train_data, train_labels))
     print(f"Epoch {epoch + 1}/{num_epochs}, Training Loss: {train_loss}, Training Accuracy: {train_accuracy}")
 
     # Validation
     if (epoch + 1) % validation_interval == 0:
         validation_loss = loss(params, (validation_data, validation_labels))
-        print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {validation_loss}")
+        validation_accuracy = accuracy(params, (validation_data, validation_labels))
+        print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {validation_loss}, Validation Accuracy: {validation_accuracy}")
 
 # After training, you can use the trained model for predictions
 # For example, predictions = model.apply({'params': params}, input_data)
