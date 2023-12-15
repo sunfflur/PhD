@@ -1,0 +1,7 @@
+Ler https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
+
+Jax usa 6170mb da memoria da GPU, o site diz que 75% da memoria total da GPU vai ser usada
+
+Sua GPU tem 8192mb, 75% disso é 6144mb, bem perto do que tá usando. Então acho que tá certo sim. 
+
+:D

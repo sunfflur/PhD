@@ -28,6 +28,10 @@ get_gpu_memory_info()
 
 # Define the neural network model using FLAX
 class SimpleClassifier(nn.Module):
+    """SimpleClassifier
+    Define the neural network model using FLAX
+    
+    """
     num_hidden: int
     num_outputs: int 
 
@@ -61,6 +65,7 @@ def loss(params, batch):
     return -jnp.mean(jnp.sum(logits * labels, axis=-1))
 
 def accuracy(params, inputs, targets):
+
     logits = model.apply(params, inputs)
     predicted_labels = jnp.argmax(logits, axis=-1)
     #print('predicted:', predicted_labels)
