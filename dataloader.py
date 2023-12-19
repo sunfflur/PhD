@@ -55,7 +55,7 @@ def dataloader(subject, electrode, stimulus_frequency, trial, path):
     #EEG_ss = np.reshape(data[:,:,:,trial],(64,1500))
     #dic = {"data": EEG_ss}
     #savemat('EEG.mat',dic)
-
+    
     if type(electrode) == int:
       #índice correspondente ao eletrodo que queremos analisar (61 = eletrodo Oz, 55 = POz)
       id_ele = electrode #61
@@ -64,6 +64,12 @@ def dataloader(subject, electrode, stimulus_frequency, trial, path):
       label = jnp.ones((1, sinal.shape[1]))*f
       sinais.append(sinal)
       labels.append(label)
+    if type(electrode) == str:
+      sinal = EEG#[:,:]
+      print(sinal.shape)
+      label = jnp.ones((sinal.shape[0], sinal.shape[2]))*f
+      sinais.append(sinal)
+      labels.append(label) 
     else:
       #sinal = EEG[:,:]
       sinal = EEG[list(electrode),:]

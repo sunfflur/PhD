@@ -27,6 +27,22 @@ def get_gpu_memory_info():
 
 get_gpu_memory_info()
 
+# Define the frequency layer.
+
+class FreqLayer(nn.Module):
+    """Custom frequency layer."""
+
+    @nn.compact
+    def __call__(self, x):
+        
+        """Applies pointwise product to the input x."""
+        # Assuming x has shape (batch_size, input_size)
+        # Initialize weights with shape (input_size,)
+        #print(x.shape)
+        w = self.param('weights', nn.initializers.normal(stddev=0.1), (x.shape[1],))
+        result = x * w
+        return result
+
 # Define the neural network model using FLAX
 class SimpleClassifier(nn.Module):
     """SimpleClassifier
@@ -40,10 +56,13 @@ class SimpleClassifier(nn.Module):
     def __call__(self, x):
         # Perform the calculation of the model to determine the prediction
         # while defining necessary layers
+        x = FreqLayer(name='freqlayer')(x)
         x = nn.Dense(features=self.num_hidden)(x)
         x = nn.relu(x)
-        x = nn.Dense(features=self.num_hidden)(x)
+        x = nn.Dropout(0.25, deterministic=True)(x)
+        x = nn.Dense(features=self.num_hidden*2)(x)
         x = nn.relu(x)
+        x = nn.Dropout(0.15, deterministic=True)(x)
         x = nn.Dense(features=self.num_outputs)(x)
         x = nn.log_softmax(x)
         return x
@@ -51,7 +70,7 @@ class SimpleClassifier(nn.Module):
 
 # Initialize the model params and optimizer
 rng = jax.random.PRNGKey(device)
-model = SimpleClassifier(num_hidden=16, num_outputs=4)
+model = SimpleClassifier(num_hidden=4, num_outputs=2)
 print(model)
 
 params = model.init(rng, jnp.ones((10, 1000)))  
@@ -97,9 +116,9 @@ validation_labels = y_val
 
 # Training loop
 batch_size = 10
-num_epochs = 500
+num_epochs = 100
 num_batches = train_data.shape[0] // batch_size
-validation_interval = 5  # Validate every 10 epochs
+validation_interval = 1  # Validate every 10 epochs
 
 for epoch in range(num_epochs):
     rng, subkey = jax.random.split(rng)
@@ -121,6 +140,11 @@ for epoch in range(num_epochs):
         validation_loss = loss(params, (validation_data, validation_labels))
         validation_accuracy = accuracy(params, (validation_data, validation_labels))
         print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {validation_loss}, Validation Accuracy: {validation_accuracy}")
+
+flat_params, _ = jax.tree_util.tree_flatten(params)
+for i, value in enumerate(flat_params):
+    print(f"Parameter {i + 1}, Shape: {value.shape}")
+
 
 # After training, you can use the trained model for predictions
 # For example, predictions = model.apply({'params': params}, input_data)
