@@ -56,5 +56,5 @@ processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels
     
 """
 
-x_train, x_val, x_test, y_train, y_val, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30, val_size=0.10, n_classes=2)
-#print(y_train.shape)
+x_train, x_val, x_test, y_train, y_val, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30, val_size=0.15, n_classes=2)
+print(x_train, y_train)
