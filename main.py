@@ -8,8 +8,13 @@ from datasplitting import splitting
 
 
 # define the file path for the original data
-datapath = '/home/natalia/Documentos/Dados/Tsinghua BCI Lab - Benchmark Dataset/'
 
+"""   
+    Dataset from: http://bci.med.tsinghua.edu.cn/
+    Starting with subject 1: S1.mat
+
+"""
+datapath = '/home/natalia/Documentos/Dados/Tsinghua BCI Lab - Benchmark Dataset/'
 
 """
     Load data from from different stimulus frequency: 8, 10, 12 and 15 Hertz and
@@ -45,7 +50,6 @@ eegdata, eeglabels = dataloader(subject=1, electrode="All", stimulus_frequency=s
     
 """
 processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels, n_levels=2, band_width=1)
-#print(processed_data.shape, processed_labels.shape)
 
 """ 
 
@@ -57,4 +61,3 @@ processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels
 """
 
 x_train, x_val, x_test, y_train, y_val, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30, val_size=0.15, n_classes=2)
-print(x_train, y_train)
