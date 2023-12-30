@@ -6,15 +6,15 @@ from normalization import NormalizeData
 from sklearn.preprocessing import LabelEncoder
 
 def dataprocessing(data, labels, n_levels=int, band_width=int):
-    
     eegdata_sliced = dataslicing(data=data, levels=n_levels)
-
+    
     grouped = []
     for block in range(len(eegdata_sliced)):
         dhtdata = dataDHT(eegdata_sliced[block])
         datapool = datapooling(dhtdata, axis=1, width=band_width)
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=1)
+    print(groupeddata.shape)
     norm_groupeddata = NormalizeData(groupeddata)
     
     # mapping the labels 
