@@ -49,7 +49,7 @@ eegdata, eeglabels = dataloader(subject=1, electrode=sel_electrodes, stimulus_fr
     Slicing into blocks, 1D-DHT and pooling.
     
 """
-processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels, n_levels=2, band_width=1)
+processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels, n_levels=2, band_width=2)
 
 """ 
 

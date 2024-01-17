@@ -1,5 +1,6 @@
 import jax
-import jax.numpy as jnp
+from jax import lax, numpy as jnp
+from typing import Any, Callable, Sequence, Optional
 from flax import linen as nn
 import optax
 from main import x_train, x_val, x_test, y_train, y_val, y_test # datas
@@ -42,13 +43,22 @@ class SimpleClassifier(nn.Module):
     #num_hidden: int
     #num_outputs: int 
     #mean_value: float
+    #features: int
+    kernel_init: Callable = nn.initializers.normal()
+    #bias_init: Callable = nn.initializers.zeros
 
     @nn.compact  # Tells Flax to look for defined submodules
     def __call__(self, x):
+        #print('input shape bef:', x.shape) #(batch,1000)
+        kernel = self.param('kernel',
+                        self.kernel_init, # Initialization function
+                        (x.shape[-1],1))  # shape info.
+        y = x * jnp.ravel(kernel) # (10,1000)
+        print('freqlayer shape:', y.shape)
         
         #x = FreqLayer(mean_value=self.mean_value, name='freqlayer')(x)
         #x = x.reshape(x.shape[0], -1)
-        x = nn.Dense(features=4, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(x)
+        x = nn.Dense(features=4, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(y)
         x = nn.leaky_relu(x)
         x = nn.Dropout(0.15, deterministic=True)(x)
         x = nn.Dense(features=16, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(x)
@@ -156,13 +166,26 @@ def create_train_state(key, lr=1e-4):
     # 3. Define the optimizer with the desired learning rate
     optimizer = optax.adam(learning_rate=lr)
     
+    """    m = 0.9
+    opt1 = optax.sgd(learning_rate=lr, momentum=0.0)
+    opt2 = optax.sgd(learning_rate=lr, momentum=m)
+    opt3 = optax.sgd(learning_rate=lr, momentum=m)
+    opt4 = optax.sgd(learning_rate=lr, momentum=m)
+    opt5 = optax.sgd(learning_rate=lr, momentum=m)
+    opt6 = optax.sgd(learning_rate=lr, momentum=m)
+    opt7 = optax.sgd(learning_rate=lr, momentum=m)
+    #opt8 = optax.adam(learning_rate=lr)
+    
+    optimizer = optax.chain(opt1, opt2, opt3, opt4, opt5, opt6, opt7)
+    """
+    
     # 4. Create and return initial state from the above information. The `Module.apply` applies a 
     # module method to variables and returns output and modified variables.
     return train_state.TrainState.create(apply_fn=model.apply, params=params, tx=optimizer)
     
     
-EPOCHS = 150
-BATCH_SIZE = 8
+EPOCHS = 500
+BATCH_SIZE = 10
 
 key = jax.random.PRNGKey(device)
 
