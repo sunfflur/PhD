@@ -25,9 +25,9 @@ datapath = '/home/natalia/Documentos/Dados/Tsinghua BCI Lab - Benchmark Dataset/
 
 sel_electrodes = {60:'O1', 61:'Oz', 62:'O2', 55:'POz', 47:'Pz', 54:'PO3', 56:'PO4', 52:'PO7',
               58:'PO8', 46:'P1', 48:'P2', 27:'Cz', 26:'C1', 28:'C2', 37:'CPZ', 18:'FCz'}
-stimulif = [10,15]#[8,10,12,15]
+stimulif = [8,10,12,15] #[10,15]#
 
-eegdata, eeglabels = dataloader(subject=1, electrode="All", stimulus_frequency=stimulif, trial=False, path=datapath)
+eegdata, eeglabels = dataloader(subject=1, electrode=sel_electrodes, stimulus_frequency=stimulif, trial=False, path=datapath)
 #print(eegdata.shape, eeglabels.shape)
 
 """
@@ -60,4 +60,4 @@ processed_data, processed_labels = dataprocessing(data=eegdata, labels=eeglabels
     
 """
 
-x_train, x_val, x_test, y_train, y_val, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30, val_size=0.15, n_classes=2)
+x_train, x_val, x_test, y_train, y_val, y_test = splitting(data=processed_data, labels=processed_labels, test_size=0.30, val_size=0.15, n_classes=4)

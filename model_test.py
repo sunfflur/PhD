@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 from flax import linen as nn
 import optax
-from main import x_train, x_val, x_test, y_train, y_val, y_test # data
+from main import x_train, x_val, x_test, y_train, y_val, y_test # datas
 import subprocess
 from flax.training import train_state
 import matplotlib.pyplot as plt
@@ -30,6 +30,9 @@ def get_gpu_memory_info():
 get_gpu_memory_info()
 
 
+
+
+
 # Define the neural network model using FLAX
 class SimpleClassifier(nn.Module):
     """SimpleClassifier
@@ -47,11 +50,11 @@ class SimpleClassifier(nn.Module):
         #x = x.reshape(x.shape[0], -1)
         x = nn.Dense(features=4, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(x)
         x = nn.leaky_relu(x)
-        x = nn.Dropout(0.25, deterministic=True)(x)
+        x = nn.Dropout(0.15, deterministic=True)(x)
         x = nn.Dense(features=16, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(x)
         x = nn.leaky_relu(x)
         x = nn.Dropout(0.15, deterministic=True)(x)
-        x = nn.Dense(features=2)(x)
+        x = nn.Dense(features=4)(x)
         return x
     
     # B. Loss function we want to use for the optimization
@@ -148,7 +151,7 @@ def create_train_state(key, lr=1e-4):
     model = SimpleClassifier()
     
     # 2. Initialize the parameters of the model
-    params = model.init(key, jnp.ones([1, 1000]))['params']
+    params = model.init(key, jnp.ones([1, x_train.shape[1]]))['params']
     
     # 3. Define the optimizer with the desired learning rate
     optimizer = optax.adam(learning_rate=lr)
@@ -158,8 +161,8 @@ def create_train_state(key, lr=1e-4):
     return train_state.TrainState.create(apply_fn=model.apply, params=params, tx=optimizer)
     
     
-EPOCHS = 100
-BATCH_SIZE = 10
+EPOCHS = 150
+BATCH_SIZE = 8
 
 key = jax.random.PRNGKey(device)
 
