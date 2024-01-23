@@ -6,6 +6,7 @@ import optax
 from main import x_train, x_val, x_test, y_train, y_val, y_test # datas
 import subprocess
 from flax.training import train_state
+from flax.core import frozen_dict
 import matplotlib.pyplot as plt
 
 
@@ -43,8 +44,8 @@ class FreqLayer(nn.Module):
                             self.kernel_init, # Initialization function
                             (x.shape[-1],1),)  # shape info.
         y = x * jnp.ravel(kernel) # (10,1000) 
-        bias = self.param('bias', self.bias_init, (self.features,))
-        y = y + bias
+        #bias = self.param('bias', self.bias_init, (self.features,))
+        #y = y + bias
         return y
 
 # Define the neural network model using FLAX
@@ -61,16 +62,6 @@ class SimpleClassifier(nn.Module):
 
     @nn.compact  # Tells Flax to look for defined submodules
     def __call__(self, x):
-        """
-        #print('input shape bef:', x.shape) #(batch,1000)
-        kernel = self.param('freq_kernel',
-                        self.kernel_init, # Initialization function
-                        (x.shape[-1],1),)  # shape info.
-        y = x * jnp.ravel(kernel) # (10,1000)
-        #print('freqlayer shape:', y.shape)
-        """
-        
-        #x = FreqLayer(mean_value=self.mean_value, name='freqlayer')(x)
         x = FreqLayer(features=1, name='FreqLayer')(x)
         x = nn.Dense(features=4, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(x)
         x = nn.leaky_relu(x)
@@ -175,11 +166,11 @@ def create_train_state(key, lr=1e-4):
     model = SimpleClassifier()
     
     # 2. Initialize the parameters of the model
-    params = model.init(key, jnp.ones([1, x_train.shape[1]]))['params']
-    #print(params)
+    params = model.init(key, jnp.ones([1, x_train.shape[1]]))['params']    
+    #print('parametros:',params)
     
     # 3. Define the optimizer with the desired learning rate
-    #optimizer = optax.adam(learning_rate=lr)
+    optimizer = optax.adam(learning_rate=lr)
     
     m = 0.9
     opt1 = optax.sgd(learning_rate=lr, momentum=0.0)
@@ -187,21 +178,12 @@ def create_train_state(key, lr=1e-4):
     opt3 = optax.sgd(learning_rate=lr, momentum=m)
     opt4 = optax.sgd(learning_rate=lr, momentum=m)
 
-    
-    #optimizer = optax.chain(opt1, opt2, opt3, opt4, opt5, opt6, opt7)
-    
-    param_labels = ('FreqLayer', 'Dense_0', 'Dense_1', 'Dense_2')
-    optimizer = optax.multi_transform({'FreqLayer': opt1,
-                                       'Dense_0': opt2,
-                                       'Dense_1': opt3,
-                                       'Dense_2': opt4}, param_labels)
-    
     # 4. Create and return initial state from the above information. The `Module.apply` applies a 
     # module method to variables and returns output and modified variables.
     return train_state.TrainState.create(apply_fn=model.apply, params=params, tx=optimizer)
     
     
-EPOCHS = 250
+EPOCHS = 500
 BATCH_SIZE = 10
 
 key = jax.random.PRNGKey(device)
