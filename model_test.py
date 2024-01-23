@@ -1,5 +1,6 @@
 import jax
 from jax import lax, numpy as jnp
+from jax.example_libraries import optimizers
 from typing import Any, Callable, Sequence, Optional
 from flax import linen as nn
 import optax
@@ -8,6 +9,7 @@ import subprocess
 from flax.training import train_state
 from flax.core import frozen_dict
 import matplotlib.pyplot as plt
+from utils import *
 
 
 # Specify GPU device
@@ -40,7 +42,7 @@ class FreqLayer(nn.Module):
     
     @nn.compact
     def __call__(self, x):     
-        kernel = self.param('freq_kernel',
+        kernel = self.param('kernel',
                             self.kernel_init, # Initialization function
                             (x.shape[-1],1),)  # shape info.
         y = x * jnp.ravel(kernel) # (10,1000) 
@@ -62,14 +64,14 @@ class SimpleClassifier(nn.Module):
 
     @nn.compact  # Tells Flax to look for defined submodules
     def __call__(self, x):
-        x = FreqLayer(features=1, name='FreqLayer')(x)
-        x = nn.Dense(features=4, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(x)
+        x = FreqLayer(features=1, name='freq1')(x)
+        x = nn.Dense(features=4, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal(),name='dense2')(x)
+        x = nn.leaky_relu(x)
+        x = nn.Dropout(0.25, deterministic=True)(x)
+        x = nn.Dense(features=8, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal(),name='dense3')(x)
         x = nn.leaky_relu(x)
         x = nn.Dropout(0.15, deterministic=True)(x)
-        x = nn.Dense(features=16, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal())(x)
-        x = nn.leaky_relu(x)
-        x = nn.Dropout(0.15, deterministic=True)(x)
-        x = nn.Dense(features=4)(x)
+        x = nn.Dense(features=4,name='dense4')(x)
         return x
     
     # B. Loss function we want to use for the optimization
@@ -154,7 +156,7 @@ def test_step(state, batch_data):
     return loss, accuracy
 
 # F. Initial train state including parameters initialization
-def create_train_state(key, lr=1e-4):
+def create_train_state(key, lr=0.001): #adam: 1e-4
     """Creates initial `TrainState for our classifier.
     
     Args:
@@ -166,25 +168,33 @@ def create_train_state(key, lr=1e-4):
     model = SimpleClassifier()
     
     # 2. Initialize the parameters of the model
-    params = model.init(key, jnp.ones([1, x_train.shape[1]]))['params']    
-    #print('parametros:',params)
+    params = model.init(key, jnp.ones([1, x_train.shape[1]]))['params']
+    #print(jax.tree_map(lambda x: x.shape, params))
     
     # 3. Define the optimizer with the desired learning rate
-    optimizer = optax.adam(learning_rate=lr)
     
-    m = 0.9
-    opt1 = optax.sgd(learning_rate=lr, momentum=0.0)
-    opt2 = optax.sgd(learning_rate=lr, momentum=m)
-    opt3 = optax.sgd(learning_rate=lr, momentum=m)
-    opt4 = optax.sgd(learning_rate=lr, momentum=m)
+    
+    #0.01, 0.09, x_train.shape[0]/BATCH_SIZE
+    lrd = optimizers.inverse_time_decay(step_size=lr,
+                                        decay_steps=x_train.shape[0]/BATCH_SIZE,
+                                        decay_rate=0.09)
+    opt1 = optax.sgd(learning_rate=lrd, momentum=0.0)
+    opt2 = optax.sgd(learning_rate=lrd, momentum=0.9)
+    opt3 = optax.adam(learning_rate=lrd)
 
+    optimizer = optax.multi_transform({'d-opt': opt2, 'freq-opt': opt1},
+                            {"freq1":"freq-opt",
+                             "dense2":"d-opt",
+                             "dense3":"d-opt",
+                             "dense4":"d-opt"})
+    
     # 4. Create and return initial state from the above information. The `Module.apply` applies a 
     # module method to variables and returns output and modified variables.
-    return train_state.TrainState.create(apply_fn=model.apply, params=params, tx=optimizer)
+    return train_state.TrainState.create(apply_fn=model.apply, params=params, tx=opt3)
     
-    
+
 EPOCHS = 500
-BATCH_SIZE = 10
+BATCH_SIZE = 4
 
 key = jax.random.PRNGKey(device)
 
