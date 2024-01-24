@@ -4,12 +4,12 @@ from jax.example_libraries import optimizers
 from typing import Any, Callable, Sequence, Optional
 from flax import linen as nn
 import optax
-from main import x_train, x_val, x_test, y_train, y_val, y_test # datas
+from experiments.data_tsinghua import x_train, x_val, x_test, y_train, y_val, y_test # datas
 import subprocess
 from flax.training import train_state
 from flax.core import frozen_dict
 import matplotlib.pyplot as plt
-from utils import *
+from experiments.main_functions.utils import *
 
 
 # Specify GPU device

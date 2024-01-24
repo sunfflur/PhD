@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from experiments.main_functions.utils import to_categorical
+from main_functions.utils import to_categorical
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 seed=11

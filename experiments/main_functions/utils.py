@@ -1,4 +1,6 @@
+import jax
 import jax.numpy as jnp
+import subprocess
 
 def NormalizeData(X, min=0, max=1):
     
@@ -33,3 +35,15 @@ def to_categorical(labels, n_classes=int):
     y_one_hot = jnp.eye(n_classes)[labels]
     return y_one_hot
 
+def get_gpu_memory_info():
+    result = subprocess.run(['nvidia-smi', '--query-gpu=memory.free,memory.used', '--format=csv,nounits,noheader'], stdout=subprocess.PIPE)
+    output = result.stdout.decode('utf-8').strip().split('\n')
+
+    for line in output:
+        free_memory, used_memory = map(int, line.split(','))
+        
+        print(f"Free GPU Memory: {free_memory} MiB")
+        print(f"Used GPU Memory: {used_memory} MiB")
+
+def my_init(key, shape, dtype=jnp.float32, mean=2.0, std=0.01):
+    return mean + std * jax.random.normal(key, shape, dtype=dtype)
