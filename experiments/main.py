@@ -1,10 +1,10 @@
 import numpy as np
 import os
 from flax import linen as nn
-from dataloader import dataloader
-from plots import hartley_fourier
-from preprocessing import dataprocessing
-from datasplitting import splitting
+from experiments.main_functions.dataloader import dataloader
+from experiments.main_functions.plots import hartley_fourier
+from experiments.main_functions.preprocessing import dataprocessing
+from main_functions.datasplitting import splitting
 
 
 # define the file path for the original data

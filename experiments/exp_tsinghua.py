@@ -34,23 +34,12 @@ def get_gpu_memory_info():
 get_gpu_memory_info()
 
 
-"""class RandomNormalInit(nn.initializers.Initializer):
-    def __init__(self, mean=2.0, std=0.01, dtype=jnp.float64):
-        self.mean = mean
-        self.std = std
-        self.dtype = dtype
-
-    def __call__(self, key, shape):
-        return self.mean + self.std * jax.random.normal(key, shape, dtype=self.dtype)"""
-
-def my_init(key, shape, dtype=jnp.float64, mean=2.0, std=0.01):
-    return mean + std * jax.random.normal(key, shape, dtype=dtype)
 
 class FreqLayer(nn.Module):
     features: int
-    #kernel_init: Callable = nn.initializers.normal()
-    kernel_init: Callable = my_init
-
+    kernel_init: Callable = nn.initializers.normal()
+    bias_init: Callable = nn.initializers.normal()
+    
     @nn.compact
     def __call__(self, x):     
         kernel = self.param('kernel',
@@ -60,7 +49,6 @@ class FreqLayer(nn.Module):
         #bias = self.param('bias', self.bias_init, (self.features,))
         #y = y + bias
         return y
-
 
 # Define the neural network model using FLAX
 class SimpleClassifier(nn.Module):
@@ -72,34 +60,20 @@ class SimpleClassifier(nn.Module):
     #num_outputs: int 
     #mean_value: float
     #features: int
-    kernel_init: Callable = nn.initializers.glorot_normal()
-    bias_init: Callable = nn.initializers.normal()
+    kernel_init: Callable = nn.initializers.normal()
 
-    def setup(self):
-        # Create the modules we need to build the network
-        # nn.Dense is a linear layer
-        self.linear1 = FreqLayer(features=1, name='freq1')
-        self.linear2 = nn.Dense(features=4, kernel_init=self.kernel_init, bias_init=self.bias_init, name='dense2')
-        self.linear3 = nn.Dense(features=8, kernel_init=self.kernel_init, bias_init=self.bias_init, name='dense3')
-        self.linear4 = nn.Dense(features=4,name='dense4')
-        
-        # create the dropout modules
-        self.droput1 = nn.Dropout(0.25, deterministic=True)
-        self.droput2 = nn.Dropout(0.15, deterministic=True)
-    
-    #@nn.compact  # Tells Flax to look for defined submodules
+    @nn.compact  # Tells Flax to look for defined submodules
     def __call__(self, x):
-        x = self.linear1(x)
-        x = self.linear2(x)
+        x = FreqLayer(features=1, name='freq1')(x)
+        x = nn.Dense(features=4, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal(),name='dense2')(x)
         x = nn.leaky_relu(x)
-        x = self.droput1(x)
-        x = self.linear3(x)
+        x = nn.Dropout(0.25, deterministic=True)(x)
+        x = nn.Dense(features=8, kernel_init=nn.initializers.glorot_normal(), bias_init=nn.initializers.normal(),name='dense3')(x)
         x = nn.leaky_relu(x)
-        x = self.droput2(x)
-        x = self.linear4(x)
+        x = nn.Dropout(0.15, deterministic=True)(x)
+        x = nn.Dense(features=4,name='dense4')(x)
         return x
-
-
+    
     # B. Loss function we want to use for the optimization
 def calculate_loss(params, inputs, labels):
     """Cross-Entropy loss function.
@@ -128,8 +102,6 @@ def calculate_accuracy(logits, labels):
     """
     return jnp.mean(jnp.argmax(logits, -1) == jnp.argmax(labels, -1))
 
-
-
 # D. Train step. We will `jit` transform it to compile it. We will get a 
 # good speedup on the subseuqent runs
 @jax.jit
@@ -138,7 +110,7 @@ def train_step(state, batch_data):
     
     Args:
         state: Current `TrainState` of the model
-        batch_data: Tuple containing a batch of images and their corresponding labels
+        batch_data: Tuple containingm a batch of images and their corresponding labels
     Returns:
         loss: Mean loss for the current batch
         accuracy: Mean accuracy for the current batch
@@ -205,12 +177,12 @@ def create_train_state(key, lr=0.001): #adam: 1e-4
     #0.01, 0.09, x_train.shape[0]/BATCH_SIZE
     lrd = optimizers.inverse_time_decay(step_size=lr,
                                         decay_steps=x_train.shape[0]/BATCH_SIZE,
-                                        decay_rate=0.05)
+                                        decay_rate=0.09)
     opt1 = optax.sgd(learning_rate=lrd, momentum=0.0)
-    opt2 = optax.sgd(learning_rate=lr, momentum=0.9)
+    opt2 = optax.sgd(learning_rate=lrd, momentum=0.9)
     opt3 = optax.adam(learning_rate=lrd)
 
-    optimizer = optax.multi_transform({'freq-opt': opt1, 'd-opt': opt2},
+    optimizer = optax.multi_transform({'d-opt': opt2, 'freq-opt': opt1},
                             {"freq1":"freq-opt",
                              "dense2":"d-opt",
                              "dense3":"d-opt",
@@ -221,8 +193,8 @@ def create_train_state(key, lr=0.001): #adam: 1e-4
     return train_state.TrainState.create(apply_fn=model.apply, params=params, tx=opt3)
     
 
-EPOCHS = 200
-BATCH_SIZE = 10
+EPOCHS = 500
+BATCH_SIZE = 4
 
 key = jax.random.PRNGKey(device)
 
