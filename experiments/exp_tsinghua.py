@@ -9,6 +9,7 @@ from flax.core import frozen_dict
 import matplotlib.pyplot as plt
 from main_functions.utils import *
 from data_tsinghua import get_data
+import time
 
 # Specify GPU device
 gpu_devices = jax.devices("gpu")
@@ -136,6 +137,7 @@ class SimpleClassifier(nn.Module):
 
 
 # B. Loss function we want to use for the optimization
+@jax.jit
 def calculate_loss(params, inputs, labels):
     """Cross-Entropy loss function.
 
@@ -153,6 +155,7 @@ def calculate_loss(params, inputs, labels):
 
 
 # C. Evaluation metric
+@jax.jit
 def calculate_accuracy(logits, labels):
     """Computes accuracy for a given batch.
 
@@ -223,6 +226,7 @@ def test_step(state, batch_data):
 
 
 # F. Initial train state including parameters initialization
+@jax.jit
 def create_train_state(key, lr=0.001):  # adam: 1e-4
     """Creates initial `TrainState for our classifier.
 
@@ -282,6 +286,7 @@ training_accuracy = []
 validation_accuracy = []
 
 # Training loop
+start = time.time()
 for i in range(EPOCHS):
     num_train_batches = len(x_train) // BATCH_SIZE
     num_valid_batches = len(x_val) // BATCH_SIZE
@@ -336,6 +341,9 @@ for i in range(EPOCHS):
     print(
         f"loss: {epoch_train_loss:.3f}   acc: {epoch_train_acc:.3f}  valid_loss: {epoch_valid_loss:.3f}  valid_acc: {epoch_valid_acc:.3f}"
     )
+end = time.time()
+
+print("--- %.2f seconds ---" % (end - start))
 
 
 # Let's plot the training and validataion losses as well as
