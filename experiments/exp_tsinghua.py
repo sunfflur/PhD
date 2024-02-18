@@ -60,9 +60,9 @@ sel_electrodes = {
     37: "CPZ",
     18: "FCz",
 }
-stimulif = [8, 10, 12, 15]  # [10,15]#
+stimulif = [8, 10, 12, 15] #[10,15] #
 
-subjects = jnp.arange(1,5)
+subjects = jnp.arange(1,36)
 
 accuracies = []
 for subject in subjects:
@@ -102,7 +102,7 @@ for subject in subjects:
         # mean_value: float
         # features: int
         kernel_init: Callable = nn.initializers.glorot_normal()
-        bias_init: Callable = nn.initializers.normal()
+        bias_init: Callable = my_bias_init
 
         def setup(self):
             # Create the modules we need to build the network
@@ -230,7 +230,7 @@ for subject in subjects:
 
     # F. Initial train state including parameters initialization
     @jax.jit
-    def create_train_state(key, lr=0.01):  # adam: 1e-4
+    def create_train_state(key, lr=0.001):  # adam: 1e-4
         """Creates initial `TrainState for our classifier.
 
         Args:
@@ -251,7 +251,7 @@ for subject in subjects:
         lrd = optimizers.inverse_time_decay(
             step_size=lr,
             decay_steps=x_train.shape[0] / BATCH_SIZE,
-            decay_rate=0.05,
+            decay_rate=0.09,
         )
         opt1 = optax.sgd(learning_rate=lrd, momentum=0.0)
         opt2 = optax.sgd(learning_rate=lrd, momentum=0.9)
@@ -270,7 +270,7 @@ for subject in subjects:
         # 4. Create and return initial state from the above information. The `Module.apply` applies a
         # module method to variables and returns output and modified variables.
         return train_state.TrainState.create(
-            apply_fn=model.apply, params=params, tx=optimizer
+            apply_fn=model.apply, params=params, tx=opt3
         )
 
 

@@ -1,6 +1,7 @@
 import jax
 import jax.numpy as jnp
 import subprocess
+from flax import linen as nn
 
 def NormalizeData(X, min=0, max=1):
     
@@ -47,3 +48,7 @@ def get_gpu_memory_info():
 
 def my_init(key, shape, dtype=jnp.float32, mean=2.0, std=0.01):
     return mean + std * jax.random.normal(key, shape, dtype=dtype)
+
+def my_bias_init(key, shape, dtype=jnp.float32):
+    init = nn.initializers.glorot_normal()(key, (1,shape[0]), dtype)
+    return jnp.ravel(init) 
