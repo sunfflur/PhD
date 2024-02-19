@@ -38,7 +38,7 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
     processed_data, processed_labels = dataprocessing(
         data=eegdata,
         labels=eeglabels,
-        n_levels=kwargs.get("n_levels", 2),
+        n_levels=kwargs.get("n_levels", 3),
         band_width=kwargs.get("band_width", 1),
     )
 
@@ -52,7 +52,7 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         data=processed_data,
         labels=processed_labels,
         test_size=kwargs.get("test_size", 0.30),
-        val_size=kwargs.get("val_size", 0.15),
+        val_size=kwargs.get("val_size", 0.20),
         n_classes=kwargs.get("n_classes", 4),
     )
     return x_train, x_val, x_test, y_train, y_val, y_test

@@ -109,7 +109,7 @@ for subject in subjects:
             # nn.Dense is a linear layer
             self.linear1 = FreqLayer(features=1, name="freq1")
             self.linear2 = nn.Dense(
-                features=4,
+                features=8,
                 kernel_init=self.kernel_init,
                 bias_init=self.bias_init,
                 name="dense2",
@@ -251,7 +251,7 @@ for subject in subjects:
         lrd = optimizers.inverse_time_decay(
             step_size=lr,
             decay_steps=x_train.shape[0] / BATCH_SIZE,
-            decay_rate=0.09,
+            decay_rate=0.05,
         )
         opt1 = optax.sgd(learning_rate=lrd, momentum=0.0)
         opt2 = optax.sgd(learning_rate=lrd, momentum=0.9)
