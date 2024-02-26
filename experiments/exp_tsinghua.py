@@ -1,5 +1,6 @@
 import jax
 from jax import lax, numpy as jnp
+import numpy as np
 from jax.example_libraries import optimizers
 from typing import Any, Callable, Sequence, Optional
 from flax import linen as nn
@@ -61,12 +62,13 @@ sel_electrodes = {
     18: "FCz",
 }
 stimulif = [8, 10, 12, 15] #[10,15] #
-
 subjects = jnp.arange(1,2)
+learning_rates = [0.0001,0.001,0.01]#jnp.arange(0.0001,0.002,0.0001) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
+opts = ["opt1", "opt2", "opt3"]
+neurons = [2, 4, 8]
 
 
-learning_rates = jnp.arange(0.0001,0.001,0.0001)
-
+mean_accs = []
 for lrs in learning_rates:
     print(lrs)
     accuracies = []
@@ -387,7 +389,9 @@ for lrs in learning_rates:
 
         test_accuracie = evaluation(x_test, y_test)
         accuracies.append(test_accuracie)
-    
-    print(f"Mean test accuracy is {jnp.mean(jnp.asarray(accuracies))*100:.2f} % and 
-          learning rate is {lrs}\n")
-    print("")   
+    mean_accs.append(jnp.mean(jnp.asarray(accuracies)))
+    print(f"Mean test accuracy is {jnp.mean(jnp.asarray(accuracies))*100:.2f} %")
+    print(f"Learning rate is {lrs:.4f}\n")
+r = jnp.concatenate((jnp.asarray(learning_rates), jnp.asarray(mean_accs)),axis=0)
+np.savetxt('/home/natalia/Git_Projects/PhD/experiments/results/tsinghua_lrs.txt',
+            r, fmt='%.5f', delimiter=',')
