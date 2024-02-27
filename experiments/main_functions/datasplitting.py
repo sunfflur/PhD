@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from main_functions.utils import to_categorical
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-seed=11
+seed=0
   
 def splitting(data, labels, test_size, val_size, n_classes):
   
