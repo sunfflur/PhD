@@ -62,10 +62,10 @@ sel_electrodes = {
     18: "FCz",
 }
 stimulif = [8, 10, 12, 15] #[10,15] #
-subjects = jnp.arange(1,2)
-learning_rates = jnp.arange(0.004,0.01,0.0001) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
-opts = ["opt1", "opt2", "opt3"]
-neurons = [2, 4, 8]
+subjects = jnp.arange(1,36)
+learning_rates = [0.0099] #jnp.arange(0.004,0.01,0.0001) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
+#opts = ["opt1", "opt2", "opt3"]
+#neurons = [2, 4, 8]
 
 
 mean_accs = []
@@ -393,5 +393,6 @@ for lrs in learning_rates:
     print(f"Mean test accuracy is {jnp.mean(jnp.asarray(accuracies))*100:.2f} %")
     print(f"Learning rate is {lrs:.4f}\n")
 r = jnp.column_stack((jnp.asarray(learning_rates), jnp.asarray(mean_accs)))
+
 np.savetxt('/home/natalia/Git_Projects/PhD/experiments/results/tsinghua_lrs.txt',
             r, fmt='%.5f', delimiter=',')
