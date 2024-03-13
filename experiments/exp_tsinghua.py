@@ -1,6 +1,7 @@
 import jax
 from jax import lax, numpy as jnp
 import numpy as np
+import pandas as pd
 from jax.example_libraries import optimizers
 from typing import Any, Callable, Sequence, Optional
 from flax import linen as nn
@@ -63,11 +64,11 @@ sel_electrodes = {
     18: "FCz",
 }
 stimulif = [8, 10, 12, 15] #[10,15] #
-subjects = jnp.arange(1,3)
-learning_rates = [0.0099, 0.01] #jnp.arange(0.004,0.01,0.0001) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
+subjects = jnp.arange(1,36)
+learning_rates = jnp.arange(0.004,0.01,0.0005) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
 opts = ["opt3", "opt4"] #"opt1","opt2"
 #neurons = [2, 4, 8]
-neurons = [(1, 4, 8, 4), (1, 8, 8, 4), (1, 8, 4, 4)]#list(product([1, 2, 4, 8],repeat=4)) (1, 8, 4, 4)
+neurons = list(product([2, 4, 8, 16],repeat=2))
 
 
 results = {
@@ -79,15 +80,17 @@ results = {
 
 
 results_list = []
-
+main_df = pd.DataFrame()
 for neuron_list in neurons:
-    neuron1, neuron2, neuron3, neuron4 = neuron_list
+    neuron1 = 1
+    neuron2, neuron3 = neuron_list
+    neuron4 = 4
     print(f"Neurons configuration is {neuron_list}\n")
     for opt in opts:
-        print(f"Optimizer is {opt}\n")
+        #print(f"Optimizer is {opt}\n")
         mean_accs = []
         for lrs in learning_rates:
-            print(f"Learning rate is {lrs:.4f}\n")
+            #print(f"Learning rate is {lrs:.4f}\n")
             accuracies = []
             for subject in subjects:
                 print('subject:', subject)
@@ -333,7 +336,8 @@ for neuron_list in neurons:
                         subkey, jnp.arange(x_train.shape[0])
                     )
                     val_indices = jax.random.permutation(subkey, jnp.arange(x_val.shape[0]))
-                    print(f"Epoch: {i+1:<3}", end=" ")
+                    if i%50==0:
+                        print(f"Epoch: {i+1:<3}", end=" ")
 
                     # Training
                     for step in range(num_train_batches):
@@ -370,9 +374,10 @@ for neuron_list in neurons:
                     validation_loss.append(epoch_valid_loss)
                     validation_accuracy.append(epoch_valid_acc)
 
-                    print(
-                        f"loss: {epoch_train_loss:.3f}   acc: {epoch_train_acc:.3f}  valid_loss: {epoch_valid_loss:.3f}  valid_acc: {epoch_valid_acc:.3f}"
-                    )
+                    if i%50==0:
+                        print(
+                            f"loss: {epoch_train_loss:.3f}   acc: {epoch_train_acc:.3f}  valid_loss: {epoch_valid_loss:.3f}  valid_acc: {epoch_valid_acc:.3f}"
+                        )
                 end = time.time()
 
                 print("--- %.2f seconds ---" % (end - start))
@@ -380,6 +385,7 @@ for neuron_list in neurons:
 
                 # Let's plot the training and validataion losses as well as
                 # accuracies for both the dataset.
+                """
                 _, ax = plt.subplots(1, 2, figsize=(15, 8))
                 ax[0].plot(range(1, EPOCHS + 1), training_loss)
                 ax[0].plot(range(1, EPOCHS + 1), validation_loss)
@@ -391,7 +397,7 @@ for neuron_list in neurons:
                 ax[1].set_xlabel("Epochs")
                 ax[1].legend(["Training accuracy", "Validation accuracy"])
 
-                plt.show()
+                plt.show()"""
 
                 def evaluation(x_val, y_val):
                     # Select some samples randomly from the validation data
@@ -411,11 +417,25 @@ for neuron_list in neurons:
 
                 test_accuracie = evaluation(x_test, y_test)
                 accuracies.append(test_accuracie)
-            mean_accs.append(jnp.mean(jnp.asarray(accuracies)))
+            test_mean = jnp.mean(jnp.asarray(accuracies))
+            mean_accs.append(test_mean)
             print(f"Mean test accuracy is {jnp.mean(jnp.asarray(accuracies))*100:.2f} %")
             #r = jnp.column_stack((jnp.asarray(lrs), jnp.asarray(mean_accs)))
-            result = jnp.column_stack(neuron_list, opt,(jnp.asarray(lrs)), jnp.mean(jnp.asarray(accuracies)))
-            results_list.append(result)
+            #result = jnp.append()
+            
+            data = {
+                'Neuron_Configuration': str(neuron_list),
+                'Optimizer': opt,
+                'Learning_Rate': str(lrs),
+                'Mean Accuracy': str(test_mean)
+            }
+            
+            df_cfg = pd.DataFrame.from_dict(data, orient="index").transpose()
+            main_df = pd.concat([main_df,df_cfg],axis=0).reset_index(drop=True)
+            print(main_df)
+            #df_full = pd.concat(df)
+            results_list.extend((neuron_list, opt, jnp.array(lrs), jnp.mean(jnp.asarray(accuracies))))
+main_df.to_csv("experiments/results/grid_search.csv")
 """
 np.savetxt('/home/natalia/Git_Projects/PhD/experiments/results/tsinghua_lrs.txt',
             r, fmt='%.5f', delimiter=',')"""
