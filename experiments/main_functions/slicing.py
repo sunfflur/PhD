@@ -1,6 +1,6 @@
 # divisão em blocos
 
-def dataslicing(data, levels=int):
+def dataslicing(data, levels: int):
   """
   
     _Slicing Function_

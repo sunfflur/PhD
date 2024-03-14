@@ -5,7 +5,7 @@ from main_functions.DHT import dataDHT
 from main_functions.utils import NormalizeData
 from sklearn.preprocessing import LabelEncoder
 
-def dataprocessing(data, labels, n_levels=int, band_width=int):
+def dataprocessing(data, labels, n_levels: int, band_width: int):
     eegdata_sliced = dataslicing(data=data, levels=n_levels)
     
     grouped = []

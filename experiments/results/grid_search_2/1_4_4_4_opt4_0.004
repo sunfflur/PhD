@@ -1,0 +1,2 @@
+,Neuron_Configuration,Optimizer,Learning_Rate,Mean Accuracy
+0,"(4, 4)",opt4,0.004,0.55172414
