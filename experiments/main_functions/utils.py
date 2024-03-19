@@ -1,3 +1,6 @@
+import os
+
+import pandas as pd
 import jax
 import jax.numpy as jnp
 import subprocess
@@ -52,3 +55,19 @@ def my_init(key, shape, dtype=jnp.float32, mean=2.0, std=0.01):
 def my_bias_init(key, shape, dtype=jnp.float32):
     init = nn.initializers.glorot_normal()(key, (1,shape[0]), dtype)
     return jnp.ravel(init) 
+
+def read_grid_search(path_to_results):
+    """read_grid_search
+    """
+    #Create path to folder of interest
+    folder_path = os.path.join(os.getcwd(),path_to_results)
+    
+    #create empty dataframe
+    data = pd.DataFrame()
+    
+    for archive in os.listdir(folder_path):
+        file = os.path.join(folder_path,archive)
+        single_data = pd.read_csv(file, index_col=0)
+        data = pd.concat([data,single_data],axis=0)
+    
+    return data.reset_index(drop=True)

@@ -67,24 +67,25 @@ sel_electrodes = {
     18: "FCz",
 }
 stimulif = [8, 10, 12, 15] #[10,15] #
-subjects = jnp.arange(1, 3)
+subjects = np.random.randint(1, 36, 5) #jnp.arange(1, 6)
 learning_rates = jnp.arange(0.004,0.01,0.0005) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
-opts = ["opt3", "opt4"] #"opt1","opt2"
+opts = ["opt3", "opt4", "opt5"] #"opt1","opt2"
 #neurons = [2, 4, 8]
 neurons = list(product([2, 4, 8, 16],repeat=2))
-
-
+levels_list = [1, 2, 3]
 results = {
+    'Levels': [],
     'Neuron_Configuration': [],
     'Optimizer': [],
     'Learning_Rate': [],
     'Mean Accuracy': []
 }
 configs_list = []
-for neuron_list in neurons:
-    for opt in opts:
-        for lrs in learning_rates:
-            configs_list.append((neuron_list,opt,lrs))
+for levels in levels_list:
+    for neuron_list in neurons:
+        for opt in opts:
+            for lrs in learning_rates:
+                configs_list.append((levels,neuron_list,opt,lrs))
 
 results_list = []
 main_df = pd.DataFrame()
@@ -92,9 +93,10 @@ for config in configs_list:
     #Important
     neuron1 = 1
     neuron4 = 4
-    neuron2, neuron3 = config[0]
-    opt = config[1]
-    lrs = config[2]
+    levels = config[0]
+    neuron2, neuron3 = config[1]
+    opt = config[2]
+    lrs = config[3]
     #End important
     #print(f"Neurons configuration is {neuron_list}\n")
     mean_accs = []
@@ -102,7 +104,7 @@ for config in configs_list:
     Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
     
     #Important
-    filename = f"{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}"
+    filename = f"{levels}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}"
     save_file_name = os.path.join(path_to_file,filename)
     if os.path.exists(save_file_name):
         print(f"{filename} already exists!")
@@ -113,7 +115,7 @@ for config in configs_list:
     for subject in subjects:
         print('subject:', subject)
         x_train, x_val, x_test, y_train, y_val, y_test = get_data(
-            datapath, sel_electrodes, stimulif, subject, n_levels = 4
+            datapath, sel_electrodes, stimulif, subject, n_levels = levels
         )
 
         class FreqLayer(nn.Module):
@@ -305,8 +307,9 @@ for config in configs_list:
             opt1 = optax.sgd(learning_rate=lrd, momentum=0.0)
             opt2 = optax.sgd(learning_rate=lrd, momentum=0.9)
             opt3 = optax.adam(learning_rate=lrd)
-
-            optimizer = optax.multi_transform(
+            opt4 = optax.adamw(learning_rate=lrs)
+            opt5 = optax.amsgrad(learning_rate=lrs)
+            opt6 = optax.multi_transform(
                 {"freq-opt": opt1, "d-opt": opt2},
                 {
                     "freq1": "freq-opt",
@@ -315,7 +318,8 @@ for config in configs_list:
                     "dense4": "d-opt",
                 },
             )
-            optim_dict = {"opt1":opt1,"opt2":opt2,"opt3":opt3,"opt4":optimizer}
+            optim_dict = {"opt1":opt1,"opt2":opt2,"opt3":opt3,
+                          "opt4":opt4,"opt5":opt5, "opt6":opt6}
             # 4. Create and return initial state from the above information. The `Module.apply` applies a
             # module method to variables and returns output and modified variables.
             #opt3 best option lr=0.001
@@ -442,6 +446,7 @@ for config in configs_list:
     #result = jnp.append()
     
     data = {
+        'Levels': str(levels),
         'Neuron_Configuration': str(neuron_list),
         'Optimizer': opt,
         'Learning_Rate': str(lrs),
@@ -454,7 +459,4 @@ for config in configs_list:
     #print(main_df)
     #df_full = pd.concat(df)
     #results_list.extend((neuron_list, opt, jnp.array(lrs), jnp.mean(jnp.asarray(accuracies))))
-main_df.to_csv("experiments/results/grid_search.csv")
-"""
-np.savetxt('/home/natalia/Git_Projects/PhD/experiments/results/tsinghua_lrs.txt',
-            r, fmt='%.5f', delimiter=',')"""
+#main_df.to_csv("experiments/results/grid_search.csv")
