@@ -35,11 +35,11 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
 
   if freq_format == True:
     # Create subplots
-    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=("Input signal", "Fourier Transform", "Hartley Transform"))
+    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=("Input signal", "Fourier Transform", "Hartley Transform"), )
 
-    color0 = dict(color='black')
-    color1 = dict(color='hotpink')
-    color2 = line=dict(color='limegreen')
+    color0 = dict(color='rgb(130, 130, 130)')
+    color1 = dict(color='rgb(0, 158, 128)')
+    color2 = dict(color='rgb(0, 0, 139)')
 
     # Add the time-domain plot to the first subplot
     fig.add_trace(go.Scatter(x=t, y=input_signal, mode='lines', name='Input Signal', line=color0), row=1, col=1)
@@ -49,12 +49,12 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
     # Add the frequency-domain plot to the second subplot
     #sampling_freq = N  # Assume a sampling frequency equal to the number of points
     #frequencies = jnp.fft.fftfreq(N) * sampling_freq
-    fig.add_trace(go.Scatter(x=frequencies, y=magnitude_spectrum0[:N//2]/N, mode='lines', name='Fourier Transform', line=color0), row=1, col=2) #[:N//2]
+    fig.add_trace(go.Scatter(x=frequencies, y=magnitude_spectrum0[:N//2]/N, mode='lines', name='Fourier Transform', line=color1), row=1, col=2) #[:N//2]
     fig.update_xaxes(title_text="Frequency [Hz]", row=1, col=2)
     fig.update_yaxes(title_text="Magnitude", row=1, col=2)
 
     # Add the Hartley transform plot to the third subplot
-    fig.add_trace(go.Scatter(x=frequencies, y=hartley_transform0[:N//2]/N, mode='lines', name='Hartley Transform', line=color0), row=1, col=3) #[:N//2]
+    fig.add_trace(go.Scatter(x=frequencies, y=hartley_transform0[:N//2]/N, mode='lines', name='Hartley Transform', line=color2), row=1, col=3) #[:N//2]
     fig.update_xaxes(title_text="Frequency [Hz]", row=1, col=3)
     fig.update_yaxes(title_text="Magnitude", row=1, col=3)
 
@@ -64,11 +64,11 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
       fig.add_annotation(
           text=f"{stimulus_frequency} Hz",  # Text to display
           x=stimulus_frequency,          # X-coordinate of the text label
-          y=1,           # Y-coordinate of the text label
+          y=1.2,           # Y-coordinate of the text label
           showarrow=True,  # Show an arrow pointing to the point
           arrowhead=2,     # Arrowhead style
           arrowsize=1,     # Arrow size
-          arrowwidth=1,    # Arrow width
+          arrowwidth=2,    # Arrow width
           arrowcolor="red",  # Arrow color
           font=dict(size=12, color="red"),  # Text font size and color
           row=1, col=i
@@ -80,7 +80,7 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
         x0=stimulus_frequency,  # X-coordinate of the line
         x1=stimulus_frequency,  # X-coordinate of the line
         y0=0,   # Starting Y-coordinate
-        y1=1,   # Ending Y-coordinate (you can adjust this as needed)
+        y1=1.2,   # Ending Y-coordinate (you can adjust this as needed)
         line=dict(color="red", width=1.5, dash="dash"),  # Red dashed line
     )
     fig.add_shape(vertical_line, row=1, col=2)
