@@ -1,0 +1,2 @@
+,Levels,Neuron_Configuration,Optimizer,Learning_Rate,Mean Accuracy
+0,3,"(16, 16)",opt3,0.0095,0.8965517

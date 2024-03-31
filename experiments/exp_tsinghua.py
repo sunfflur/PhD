@@ -28,7 +28,6 @@ print(f"Using device: {jax.devices()[0].device_kind}")
 
 get_gpu_memory_info()
 
-
 # define the file path for the original data
 
 
@@ -66,13 +65,15 @@ sel_electrodes = {
     37: "CPZ",
     18: "FCz",
 }
+np.random.seed(11)
 stimulif = [8, 10, 12, 15] #[10,15] #
-subjects = np.random.randint(1, 36, 5) #jnp.arange(1, 6)
-learning_rates = jnp.arange(0.004,0.01,0.0005) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
+subjects = np.random.randint(1, 36,15) #jnp.arange(1, 6)
+print(subjects)
+learning_rates = jnp.arange(0.004,0.01,0.0005).round(4) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
 opts = ["opt3", "opt4", "opt5"] #"opt1","opt2"
 #neurons = [2, 4, 8]
 neurons = list(product([2, 4, 8, 16],repeat=2))
-levels_list = [1, 2, 3]
+levels_list = [3,2,1]
 results = {
     'Levels': [],
     'Neuron_Configuration': [],
@@ -85,10 +86,11 @@ for levels in levels_list:
     for neuron_list in neurons:
         for opt in opts:
             for lrs in learning_rates:
-                configs_list.append((levels,neuron_list,opt,lrs))
+                configs_list.append((levels, neuron_list,opt,lrs))
 
 results_list = []
 main_df = pd.DataFrame()
+np.random.shuffle(configs_list)
 for config in configs_list:
     #Important
     neuron1 = 1
@@ -114,6 +116,7 @@ for config in configs_list:
     accuracies = []
     for subject in subjects:
         print('subject:', subject)
+        print('level:',levels)
         x_train, x_val, x_test, y_train, y_val, y_test = get_data(
             datapath, sel_electrodes, stimulif, subject, n_levels = levels
         )
@@ -307,8 +310,8 @@ for config in configs_list:
             opt1 = optax.sgd(learning_rate=lrd, momentum=0.0)
             opt2 = optax.sgd(learning_rate=lrd, momentum=0.9)
             opt3 = optax.adam(learning_rate=lrd)
-            opt4 = optax.adamw(learning_rate=lrs)
-            opt5 = optax.amsgrad(learning_rate=lrs)
+            opt4 = optax.adamw(learning_rate=float(lr))
+            opt5 = optax.amsgrad(learning_rate=float(lr))
             opt6 = optax.multi_transform(
                 {"freq-opt": opt1, "d-opt": opt2},
                 {
