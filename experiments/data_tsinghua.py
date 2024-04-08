@@ -40,6 +40,7 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         labels=eeglabels,
         n_levels=kwargs.get("n_levels", 3),
         band_width=kwargs.get("band_width", 1),
+        transform=kwargs.get("transform", "DHT")
     )
 
     """ 

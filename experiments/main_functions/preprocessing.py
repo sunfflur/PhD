@@ -2,16 +2,20 @@ import jax.numpy as jnp
 from main_functions.slicing import dataslicing
 from main_functions.pooling import datapooling
 from main_functions.DHT import dataDHT
+from main_functions.DFT import dataDFT
 from main_functions.utils import NormalizeData
 from sklearn.preprocessing import LabelEncoder
 
-def dataprocessing(data, labels, n_levels: int, band_width: int):
+def dataprocessing(data, labels, n_levels: int, band_width: int, transform: str):
     eegdata_sliced = dataslicing(data=data, levels=n_levels)
     
     grouped = []
     for block in range(len(eegdata_sliced)):
-        dhtdata = dataDHT(eegdata_sliced[block])
-        datapool = datapooling(dhtdata, axis=1, width=band_width)
+        if transform == 'DHT':
+            functiondata = dataDHT(eegdata_sliced[block])
+        elif transform == 'DFT':
+            functiondata = dataDFT(eegdata_sliced[block])
+        datapool = datapooling(functiondata, axis=1, width=band_width)
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=1)
     print(groupeddata.shape)

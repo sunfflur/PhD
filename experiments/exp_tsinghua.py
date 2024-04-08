@@ -67,26 +67,34 @@ sel_electrodes = {
 }
 np.random.seed(11)
 stimulif = [8, 10, 12, 15] #[10,15] #
-subjects = np.random.randint(1, 36,15) #jnp.arange(1, 6)
+subjects = np.random.randint(1, 36, 35) #jnp.arange(1, 6)
 print(subjects)
 learning_rates = jnp.arange(0.004,0.01,0.0005).round(4) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
 opts = ["opt3", "opt4", "opt5"] #"opt1","opt2"
 #neurons = [2, 4, 8]
-neurons = list(product([2, 4, 8, 16],repeat=2))
-levels_list = [3,2,1]
+neurons = list(product([8, 16],repeat=2)) # 4 possibilities
+levels_list = [3,2]
+functions = ['DFT', 'DHT']
+
+# the learning rate should not vary a lot, if they are in different groups, 
+
 results = {
+    'Function': [],
     'Levels': [],
     'Neuron_Configuration': [],
     'Optimizer': [],
     'Learning_Rate': [],
     'Mean Accuracy': []
 }
+
 configs_list = []
-for levels in levels_list:
-    for neuron_list in neurons:
-        for opt in opts:
-            for lrs in learning_rates:
-                configs_list.append((levels, neuron_list,opt,lrs))
+
+for f in functions:
+    for levels in levels_list:
+        for neuron_list in neurons:
+            for opt in opts:
+                for lrs in learning_rates:
+                    configs_list.append((levels, neuron_list,opt,lrs, f))
 
 results_list = []
 main_df = pd.DataFrame()
@@ -99,10 +107,10 @@ for config in configs_list:
     neuron2, neuron3 = config[1]
     opt = config[2]
     lrs = config[3]
+    f = config[4]
     #End important
-    #print(f"Neurons configuration is {neuron_list}\n")
     mean_accs = []
-    path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}")
+    path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}")
     Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
     
     #Important
@@ -118,7 +126,7 @@ for config in configs_list:
         print('subject:', subject)
         print('level:',levels)
         x_train, x_val, x_test, y_train, y_val, y_test = get_data(
-            datapath, sel_electrodes, stimulif, subject, n_levels = levels
+            datapath, sel_electrodes, stimulif, subject, n_levels = levels, transform = f
         )
 
         class FreqLayer(nn.Module):
@@ -331,7 +339,7 @@ for config in configs_list:
             )
 
 
-        EPOCHS = 500
+        EPOCHS = 350
         BATCH_SIZE = 10
 
         key = jax.random.PRNGKey(device)
@@ -449,6 +457,7 @@ for config in configs_list:
     #result = jnp.append()
     
     data = {
+        'Function': f,
         'Levels': str(levels),
         'Neuron_Configuration': str(neuron_list),
         'Optimizer': opt,
