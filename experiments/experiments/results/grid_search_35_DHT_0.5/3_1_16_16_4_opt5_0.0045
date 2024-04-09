@@ -1,0 +1,2 @@
+,Function,TimeOff,Levels,Neuron_Configuration,Optimizer,Learning_Rate,Mean Accuracy
+0,DHT,0.5,3,"[16, 16]",opt5,0.0045,0.894335

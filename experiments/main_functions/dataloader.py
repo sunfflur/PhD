@@ -33,8 +33,8 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
   data_eeg = loadmat(filename)
   data = data_eeg['data']
 
-  start = sec_off * 250 #250
-  end = sec_off * (-250) #-250
+  start = int(sec_off * 250) #250
+  end = int(sec_off * (-250)) #-250
   
   sinais = []
   labels = []
@@ -44,12 +44,20 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
     ii = np.where(freqs==f)
 
     #isola os registros de EEG dos L eletrodos daquele sujeito, para aquela freq. de estímulo e para aquela sessão
+
     if type(trial) == int:
       #EEG = filtro_CAR(np.reshape(data[:,start:end,ii[1],trial],(64,1500-(start-end),1)))
-      EEG = np.reshape(data[:,start:end,ii[1],trial],(64,1500-(start-end),1))
+      if start != 0:
+        EEG = np.reshape(data[:,start:end,ii[1],trial],(64,1500-(start-end),1))
+      else:
+        EEG = np.reshape(data[:,:,ii[1],trial],(64,1500-(start-end),1))
     else:
       #EEG = filtro_CAR(np.reshape(data[:,start:end,ii[1],:],(64,1500-(start-end),6)))
-      EEG = np.reshape(data[:,start:end,ii[1],:],(64,1500-(start-end),6))
+      if start != 0:
+        EEG = np.reshape(data[:,start:end,ii[1],:],(64,1500-(start-end),6))
+      else:
+        EEG = np.reshape(data[:,:,ii[1],:],(64,1500-(start-end),6))
+      
 
     #isola os registros de EEG dos L eletrodos daquele sujeito para aquela sessão
     #EEG_ss = np.reshape(data[:,:,:,trial],(64,1500))

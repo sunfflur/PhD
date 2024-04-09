@@ -16,6 +16,7 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         electrode=sel_electrodes,
         stimulus_frequency=stimulif,
         trial=False,
+        sec_off=kwargs.get("sec_off", 1),
         path=datapath,
     )
     # print(eegdata.shape, eeglabels.shape)

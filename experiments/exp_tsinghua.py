@@ -66,35 +66,46 @@ sel_electrodes = {
     18: "FCz",
 }
 np.random.seed(11)
-stimulif = [8, 10, 12, 15] #[10,15] #
-subjects = np.random.randint(1, 36, 35) #jnp.arange(1, 6)
-print(subjects)
-learning_rates = jnp.arange(0.004,0.01,0.0005).round(4) #jnp.asarray([4.00e-02]) #jnp.arange(0.0001,0.1,0.01)=8276 #jnp.arange(0.0001,0.002,0.0001)
-opts = ["opt3", "opt4", "opt5"] #"opt1","opt2"
-#neurons = [2, 4, 8]
+
+# Grid Search performed over the next possibilities
+
+"""stimulif = [8, 10, 12, 15] 
+subjects = np.random.randint(1, 36, 35) 
+learning_rates = jnp.arange(0.004,0.01,0.0005).round(4) 
+opts = ["opt3", "opt4", "opt5"]
 neurons = list(product([8, 16],repeat=2)) # 4 possibilities
 levels_list = [3,2]
-functions = ['DFT', 'DHT']
+functions = ['DFT', 'DHT']"""
 
-# the learning rate should not vary a lot, if they are in different groups, 
+# Configuration for the top 1 accuracy using the DHT
+stimulif = [8, 10, 12, 15] 
+subjects = np.random.randint(1, 36, 35) 
+learning_rates = [0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095]
+opts = ["opt3", "opt4", "opt5"] # ["opt3", "opt4", "opt5"]
+neurons = [[16, 16]]
+levels_list = [3]
+functions = ['DHT']
+seconds_off = [0, 0.5, 1.5]
 
 results = {
     'Function': [],
+    'Time_Off': [],
     'Levels': [],
     'Neuron_Configuration': [],
     'Optimizer': [],
     'Learning_Rate': [],
-    'Mean Accuracy': []
+    'Mean_Accuracy': []
 }
 
 configs_list = []
 
-for f in functions:
-    for levels in levels_list:
-        for neuron_list in neurons:
-            for opt in opts:
-                for lrs in learning_rates:
-                    configs_list.append((levels, neuron_list,opt,lrs, f))
+for off in seconds_off:
+    for f in functions:
+        for levels in levels_list:
+            for neuron_list in neurons:
+                for opt in opts:
+                    for lrs in learning_rates:
+                        configs_list.append((levels, neuron_list,opt,lrs, f, off))
 
 results_list = []
 main_df = pd.DataFrame()
@@ -108,13 +119,14 @@ for config in configs_list:
     opt = config[2]
     lrs = config[3]
     f = config[4]
+    off = config[5]
     #End important
     mean_accs = []
-    path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}")
+    path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10")
     Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
     
     #Important
-    filename = f"{levels}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}"
+    filename = f"{levels}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}"
     save_file_name = os.path.join(path_to_file,filename)
     if os.path.exists(save_file_name):
         print(f"{filename} already exists!")
@@ -124,9 +136,9 @@ for config in configs_list:
     accuracies = []
     for subject in subjects:
         print('subject:', subject)
-        print('level:',levels)
         x_train, x_val, x_test, y_train, y_val, y_test = get_data(
-            datapath, sel_electrodes, stimulif, subject, n_levels = levels, transform = f
+            datapath, sel_electrodes, stimulif, subject, 
+            n_levels = levels, transform = f, sec_off = off
         )
 
         class FreqLayer(nn.Module):
@@ -458,11 +470,12 @@ for config in configs_list:
     
     data = {
         'Function': f,
+        'Time_Off': str(off),
         'Levels': str(levels),
         'Neuron_Configuration': str(neuron_list),
         'Optimizer': opt,
         'Learning_Rate': str(lrs),
-        'Mean Accuracy': str(test_mean)
+        'Mean_Accuracy': str(test_mean)
     }
     
     df_cfg = pd.DataFrame.from_dict(data, orient="index").transpose()
