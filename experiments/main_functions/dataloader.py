@@ -6,7 +6,7 @@ seed=11
 
 
 
-def dataloader(subject, electrode, stimulus_frequency, trial, path):
+def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
   #escolha do sujeito cujos dados vamos processar/analisar
   
   suj = subject
@@ -33,8 +33,8 @@ def dataloader(subject, electrode, stimulus_frequency, trial, path):
   data_eeg = loadmat(filename)
   data = data_eeg['data']
 
-  start = 250 #250
-  end = -250 #-250
+  start = sec_off * 250 #250
+  end = sec_off * (-250) #-250
   
   sinais = []
   labels = []
