@@ -4,7 +4,7 @@ from flax import linen as nn
 from main_functions.dataloader import dataloader
 from main_functions.plots import hartley_fourier
 from main_functions.preprocessing import dataprocessing
-from main_functions.datasplitting import splitting
+from main_functions.datasplitting import splitting, splitting_per_trial
 
 
 def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
@@ -55,6 +55,22 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         labels=processed_labels,
         test_size=kwargs.get("test_size", 0.30),
         val_size=kwargs.get("val_size", 0.20),
-        n_classes=kwargs.get("n_classes", 4),
-    )
+        n_classes=kwargs.get("n_classes", 4))
+    
+    """
+        _Data Splitting per Trial_
+        Splits the data into train and validation sets using sklearn train_test_plit function.
+        Here we take care of shuffling the data and stratify according to the labels set.
+        Additionally, we take care of keeping out one of the 6 trials for testing, avoiding mixing
+        it with the remaining trials. 
+    """
+    
+    x_train, x_val, x_test, y_train, y_val, y_test = splitting_per_trial(
+        data=processed_data,
+        labels=processed_labels,
+        test_trial=kwargs.get("test_trial", 5),
+        val_size=kwargs.get("val_size", 0.20),
+        n_classes=kwargs.get("n_classes", 4))
+    
+    
     return x_train, x_val, x_test, y_train, y_val, y_test

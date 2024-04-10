@@ -5,6 +5,11 @@ import jax
 import jax.numpy as jnp
 import subprocess
 from flax import linen as nn
+key = 0
+
+def shuffling(x_test, y_test):
+  idx_test = jax.random.permutation(jax.random.PRNGKey(key), x_test.shape[0])
+  return x_test[idx_test], y_test[idx_test]
 
 def NormalizeData(X, min=0, max=1):
     

@@ -1,9 +1,9 @@
 import jax.numpy as jnp
-from main_functions.slicing import dataslicing
-from main_functions.pooling import datapooling
-from main_functions.DHT import dataDHT
-from main_functions.DFT import dataDFT
-from main_functions.utils import NormalizeData
+from experiments.main_functions.slicing import dataslicing
+from experiments.main_functions.pooling import datapooling
+from experiments.main_functions.DHT import dataDHT
+from experiments.main_functions.DFT import dataDFT
+from experiments.main_functions.utils import NormalizeData
 from sklearn.preprocessing import LabelEncoder
 
 def dataprocessing(data, labels, n_levels: int, band_width: int, transform: str):
