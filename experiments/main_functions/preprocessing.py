@@ -19,9 +19,9 @@ def dataprocessing(data, labels, n_levels: int, band_width: int, transform: str)
         print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)
-    #print(groupeddata.shape)
-    norm_groupeddata = NormalizeData(groupeddata)
     print(groupeddata.shape)
+    norm_groupeddata = NormalizeData(groupeddata)
+    
     
     # mapping the labels 
     flattened = labels.flatten()

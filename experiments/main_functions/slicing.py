@@ -13,7 +13,7 @@ def dataslicing(data, levels: int):
   snl = data
   niveis = levels
   N = snl.shape[2]
-  totalb = int(((4**(niveis))-1)/3)
+  #totalb = int(((4**(niveis))-1)/3)
 
   slices = []
   for nivel in range(0,niveis):

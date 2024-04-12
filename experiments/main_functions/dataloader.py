@@ -68,7 +68,7 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
       id_ele = electrode #61
       #captura do sinal de EEG
       sinal = EEG[id_ele,:]
-      label = jnp.ones((1, sinal.shape[1], sinal.shape[3]))*f
+      label = jnp.ones((sinal.shape[0],1))*f
       sinais.append(sinal)
       labels.append(label)
     elif type(electrode) == str:
@@ -82,7 +82,5 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
       label = jnp.ones((sinal.shape[0], sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label) 
-      
-  print(len(sinais))
-  print(len(labels))
+
   return jnp.concatenate(sinais, axis=1), jnp.concatenate(labels, axis=1)
