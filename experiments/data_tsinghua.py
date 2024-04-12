@@ -50,12 +50,12 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         Here we take care of shuffling the data and stratify according to the labels set.
     """
 
-    x_train, x_val, x_test, y_train, y_val, y_test = splitting(
+    """ x_train, x_val, x_test, y_train, y_val, y_test = splitting(
         data=processed_data,
         labels=processed_labels,
         test_size=kwargs.get("test_size", 0.30),
         val_size=kwargs.get("val_size", 0.20),
-        n_classes=kwargs.get("n_classes", 4))
+        n_classes=kwargs.get("n_classes", 4))"""
     
     """
         _Data Splitting per Trial_
@@ -69,7 +69,7 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         data=processed_data,
         labels=processed_labels,
         test_trial=kwargs.get("test_trial", 5),
-        val_size=kwargs.get("val_size", 0.20),
+        val_trial=kwargs.get("val_trial", 2),
         n_classes=kwargs.get("n_classes", 4))
     
     

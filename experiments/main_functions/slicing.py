@@ -9,10 +9,10 @@ def dataslicing(data, levels: int):
     That means, e.g., 2 levels of slicing will return 5 blocks: the original array + the original array sliced into 4 equaly sized arrays.
 
   """
-
+  # data now has shape (16, 4, 1000, 6)
   snl = data
   niveis = levels
-  N = snl.shape[1]
+  N = snl.shape[2]
   totalb = int(((4**(niveis))-1)/3)
 
   slices = []
@@ -21,6 +21,6 @@ def dataslicing(data, levels: int):
     blocos = 4**nivel
     w = N//blocos
     for b in range(w, N+1, w):
-      output = snl[:,b-w:b,:] # 1: [0:375], 2: [375:750], 3: [750:1125], 4:[1125:1500]
+      output = snl[:,:,b-w:b,:] # 1: [0:375], 2: [375:750], 3: [750:1125], 4:[1125:1500]
       slices.append(output)
   return slices

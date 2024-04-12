@@ -42,22 +42,21 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
     #print('freq:', f)
     #encontra o índice da frequência selecionada
     ii = np.where(freqs==f)
-
     #isola os registros de EEG dos L eletrodos daquele sujeito, para aquela freq. de estímulo e para aquela sessão
-
+    #print(ii[1][0])
     if type(trial) == int:
       #EEG = filtro_CAR(np.reshape(data[:,start:end,ii[1],trial],(64,1500-(start-end),1)))
       if start != 0:
-        EEG = np.reshape(data[:,start:end,ii[1],trial],(64,1500-(start-end),1))
+        EEG = np.reshape(data[:,start:end,ii[1],trial],(64, 1, 1500-(start-end),1))
+        
       else:
-        EEG = np.reshape(data[:,:,ii[1],trial],(64,1500-(start-end),1))
+        EEG = np.reshape(data[:,:,ii[1],trial],(64, 1, 1500-(start-end),1))
     else:
       #EEG = filtro_CAR(np.reshape(data[:,start:end,ii[1],:],(64,1500-(start-end),6)))
       if start != 0:
-        EEG = np.reshape(data[:,start:end,ii[1],:],(64,1500-(start-end),6))
+        EEG = np.reshape(data[:,start:end,ii[1],:],(64, 1, 1500-(start-end),6))
       else:
-        EEG = np.reshape(data[:,:,ii[1],:],(64,1500-(start-end),6))
-      
+        EEG = np.reshape(data[:,:,ii[1],:],(64, 1, 1500-(start-end),6))
 
     #isola os registros de EEG dos L eletrodos daquele sujeito para aquela sessão
     #EEG_ss = np.reshape(data[:,:,:,trial],(64,1500))
@@ -69,18 +68,21 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
       id_ele = electrode #61
       #captura do sinal de EEG
       sinal = EEG[id_ele,:]
-      label = jnp.ones((1, sinal.shape[1]))*f
+      label = jnp.ones((1, sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label)
     elif type(electrode) == str:
       sinal = EEG#[:,:]
-      label = jnp.ones((sinal.shape[0], sinal.shape[2]))*f
+      label = jnp.ones((sinal.shape[0], sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label) 
     else:
       #sinal = EEG[:,:]
       sinal = EEG[list(electrode),:]
-      label = jnp.ones((sinal.shape[0], sinal.shape[2]))*f
+      label = jnp.ones((sinal.shape[0], sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label) 
-  return jnp.concatenate(sinais), jnp.concatenate(labels)
+      
+  print(len(sinais))
+  print(len(labels))
+  return jnp.concatenate(sinais, axis=1), jnp.concatenate(labels, axis=1)

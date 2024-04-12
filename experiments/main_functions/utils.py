@@ -24,8 +24,8 @@ def NormalizeData(X, min=0, max=1):
     Returns:
     - Array of the same dimension as X normalized between min and max values.
     """
-    
-    X_std = (X - jnp.min(X)) / (jnp.max(X) - jnp.min(X))
+    # data now has shape (16, 4, 1000, 6)
+    X_std = (X - jnp.min(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1])) / (jnp.max(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]) - jnp.min(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]))
     X_scaled = X_std * (max - min) + min
     
     return X_scaled
