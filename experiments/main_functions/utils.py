@@ -1,15 +1,15 @@
 import os
-
+import numpy as np
 import pandas as pd
 import jax
 import jax.numpy as jnp
 import subprocess
 from flax import linen as nn
-key = 0
 
 def shuffling(x_test, y_test):
-  idx_test = jax.random.permutation(jax.random.PRNGKey(key), x_test.shape[0])
-  return x_test[idx_test], y_test[idx_test]
+    k = np.random.randint(1000)
+    idx_test = jax.random.permutation(jax.random.PRNGKey(k), x_test.shape[0])
+    return x_test[idx_test], y_test[idx_test]
 
 def NormalizeData(X, min=0, max=1):
     
@@ -76,3 +76,7 @@ def read_grid_search(path_to_results):
         data = pd.concat([data,single_data],axis=0)
     
     return data.reset_index(drop=True)
+
+def sel_trials(trials, val_trial: int):
+    train_trials = jnp.delete(trials, jnp.where(trials == val_trial)[0][0])
+    return train_trials

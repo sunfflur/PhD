@@ -36,12 +36,13 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         Implements the first 3 stages of the methodology: 
         Slicing into blocks, 1D-DHT and pooling.
     """
-    processed_data, processed_labels = dataprocessing(
+    processed_data, processed_labels, ntrials = dataprocessing(
         data=eegdata,
-        labels=eeglabels,
         n_levels=kwargs.get("n_levels", 3),
         band_width=kwargs.get("band_width", 1),
-        transform=kwargs.get("transform", "DHT")
+        transform=kwargs.get("transform", "DHT"),
+        window=kwargs.get("window", 2),
+        overlap=kwargs.get("overlap", 0)        
     )
 
     """ 
@@ -65,12 +66,14 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         it with the remaining trials. 
     """
     
+        
     x_train, x_val, x_test, y_train, y_val, y_test = splitting_per_trial(
-        data=processed_data,
-        labels=processed_labels,
-        test_trial=kwargs.get("test_trial", 5),
-        val_trial=kwargs.get("val_trial", 2),
-        n_classes=kwargs.get("n_classes", 4))
-    
+        data=processed_data.reshape(processed_data.shape[0],-1), 
+        labels=processed_labels, 
+        split_train=kwargs.get("split_train", [0,1,3,5]),
+        split_val=kwargs.get("split_val", [2]),
+        split_test=kwargs.get("split_test", [4]),
+        trial_gab=ntrials,
+        n_classes=kwargs.get("n_classes", 6))
     
     return x_train, x_val, x_test, y_train, y_val, y_test

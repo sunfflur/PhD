@@ -17,7 +17,7 @@ from main_functions.utils import *
 from data_tsinghua import get_data
 import time
 
-np.random.seed(11)
+#np.random.seed(11)
 
 
 
@@ -82,21 +82,28 @@ levels_list = [3,2]
 functions = ['DFT', 'DHT']"""
 
 # Configuration for the top 1 accuracy using the DHT
-stimulif = [8, 10, 12, 15] 
-subjects = np.random.randint(1, 36, 2) #np.random.randint(1, 36, 35) 
-learning_rates = [0.001, 0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095]
+stimulif = [8,9.4,10.8,12.2,13.6,15] #[8, 10, 12, 15] 
+subjects = [13] #np.random.randint(1, 36, 1) #np.random.randint(1, 36, 35) 
+learning_rates = [0.001, 0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095] #[0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095]
 opts = ["opt3", "opt4", "opt5"] # ["opt3", "opt4", "opt5"]
-neurons = [[8, 16]] #list(product([2, 4],repeat=2)) #[[16, 16]]
-levels_list = [1,2] #[3]
-functions = ['DHT']
-seconds_off = [0, 0.5] #, 1.5
-trials = jnp.arange(5)
-test_trial = np.random.randint(6)
+neurons = list(product([8, 16],repeat=2)) #[[16, 16]]
+levels_list = [2, 3] #[1,2,3] #[3]
+band_widths = [1, 2] #[1, 2]
+functions = ['DFT', 'DHT'] #[DHT]
+seconds_off = [0.5] #[0, 0.5
+total_trials = jnp.arange(6) # total possible trials
+test_trial = [np.random.randint(6)] # choose one trial to test
+train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
+windows = [2, 3] #[2, 3]
+overlaps = [1] #[0, 1]
 
 results = {
     'Function': [],
     'Time_Off': [],
+    'Window': [],
+    'Overlap': [],
     'Levels': [],
+    'Band_Width': [],
     'Neuron_Configuration': [],
     'Optimizer': [],
     'Learning_Rate': [],
@@ -105,13 +112,16 @@ results = {
 
 configs_list = []
 
-for off in seconds_off:
-    for f in functions:
-        for levels in levels_list:
-            for neuron_list in neurons:
-                for opt in opts:
-                    for lrs in learning_rates:
-                        configs_list.append((levels, neuron_list,opt,lrs, f, off))
+for w in windows:
+    for o in overlaps:
+        for off in seconds_off:
+            for f in functions:
+                for levels in levels_list:
+                    for width in band_widths:
+                        for neuron_list in neurons:
+                            for opt in opts:
+                                for lrs in learning_rates:
+                                    configs_list.append((levels, neuron_list, opt, lrs, f, off, w, o, width))
 
 results_list = []
 main_df = pd.DataFrame()
@@ -119,20 +129,23 @@ np.random.shuffle(configs_list)
 for config in configs_list:
     #Important
     neuron1 = 1
-    neuron4 = 4
+    neuron4 = 6
     levels = config[0]
     neuron2, neuron3 = config[1]
     opt = config[2]
     lrs = config[3]
     f = config[4]
     off = config[5]
+    w = config[6]
+    o = config[7]
+    width = config[8]
     #End important
     mean_accs = []
     path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10")
     Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
     
     #Important
-    filename = f"{levels}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}"
+    filename = f"{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{w}_{o}"
     save_file_name = os.path.join(path_to_file,filename)
     if os.path.exists(save_file_name):
         print(f"{filename} already exists!")
@@ -145,11 +158,14 @@ for config in configs_list:
         print('subject:', subject)
         
         accuracies_per_trial = []
-        for trial in trials:
+        for trial in train_val_trials:
             print('val_trial:', trial)
             x_train, x_val, x_test, y_train, y_val, y_test = get_data(
                 datapath, sel_electrodes, stimulif, subject, 
-                n_levels = levels, transform = f, sec_off = off, test_trial=test_trial, val_trial=trial)
+                n_levels = levels, band_width=width, transform = f, sec_off = off, 
+                split_test=test_trial, split_val=[trial], split_train=sel_trials(train_val_trials, trial), 
+                window=w, overlap=o, n_classes=6)
+            
             print(x_train.shape, x_val.shape, x_test.shape, y_train.shape, y_val.shape, y_test.shape)
             
             class FreqLayer(nn.Module):
@@ -485,7 +501,10 @@ for config in configs_list:
     data = {
         'Function': f,
         'Time_Off': str(off),
+        'Window': str(w),
+        'Overlap': str(o),
         'Levels': str(levels),
+        'Band_Width': str(width),
         'Neuron_Configuration': str(neuron_list),
         'Optimizer': opt,
         'Learning_Rate': str(lrs),

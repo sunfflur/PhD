@@ -4,6 +4,8 @@ from scipy.io import loadmat,savemat
 import py7zr
 seed=11
 
+def filtro_CAR(X):
+  return X - np.mean(X,axis=0,keepdims=True)
 
 
 def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
@@ -29,6 +31,7 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
   data_freq = loadmat(path+'Freq_Phase.mat')
   #isola o vetor de frequências
   freqs = data_freq['freqs']
+  
   #carrega os dados de EEG
   data_eeg = loadmat(filename)
   data = data_eeg['data']
@@ -39,11 +42,9 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
   sinais = []
   labels = []
   for f in stimulus_frequency:
-    #print('freq:', f)
     #encontra o índice da frequência selecionada
-    ii = np.where(freqs==f)
+    ii = np.where(np.isclose(freqs,f))
     #isola os registros de EEG dos L eletrodos daquele sujeito, para aquela freq. de estímulo e para aquela sessão
-    #print(ii[1][0])
     if type(trial) == int:
       #EEG = filtro_CAR(np.reshape(data[:,start:end,ii[1],trial],(64,1500-(start-end),1)))
       if start != 0:
@@ -73,14 +74,14 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
       labels.append(label)
     elif type(electrode) == str:
       sinal = EEG#[:,:]
-      label = jnp.ones((sinal.shape[0], sinal.shape[1], sinal.shape[3]))*f
+      label = jnp.ones((sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label) 
     else:
       #sinal = EEG[:,:]
       sinal = EEG[list(electrode),:]
-      label = jnp.ones((sinal.shape[0], sinal.shape[1], sinal.shape[3]))*f
+      label = jnp.ones((sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label) 
 
-  return jnp.concatenate(sinais, axis=1), jnp.concatenate(labels, axis=1)
+  return filtro_CAR(jnp.concatenate(sinais, axis=1)), jnp.concatenate(labels, axis=0)

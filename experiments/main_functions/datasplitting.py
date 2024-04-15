@@ -20,59 +20,28 @@ def splitting(data, labels, test_size, val_size, n_classes):
   return x_train, x_val, x_test, to_categorical(y_train, n_classes=n_classes), to_categorical(y_val, n_classes=n_classes), to_categorical(y_test, n_classes=n_classes)
 
 
-
-def splitting_per_trial(data, labels, test_trial, val_trial, n_classes):
-  
-  # create mask based on the test_trial (~mask == not mask)
-
-  # data now has shape (16, 4, 1000, 6) 
-  mask = jnp.arange(6) == test_trial
-  # Split the data into test and train sets
-  test_set = data[:, :, :, mask]
-  test_labels = labels[:, :, mask][0,...]
-  train_set1 = data[:, :, :, ~mask]
-  train_labels1 = labels[:, :, ~mask][0,...]
-  
-  # create mask based on the val_trial (~mask == not mask)
-
-  val_mask = jnp.arange(5) == val_trial
-  val_set = train_set1[:, :, :, val_mask]
-  val_labels = train_labels1[:, val_mask]
-  train_set = train_set1[:, :, :, ~val_mask]
-  train_labels = train_labels1[:, ~val_mask]
-  
-  # reshape to take off the last dimension - # data now has shape (16, 4, 1000, 6) 
-  test_data = jnp.reshape(test_set, (test_set.shape[1]*test_set.shape[3], test_set.shape[0]*test_set.shape[2])) #24, 16*1000
-  test_ydata = jnp.reshape(test_labels, (test_labels.shape[0]*test_labels.shape[1])) #24
-  
-  train_data = jnp.reshape(train_set, (train_set.shape[1]*train_set.shape[3], train_set.shape[0]*train_set.shape[2])) #24, 16*1000
-  train_ydata = jnp.reshape(train_labels, (train_labels.shape[0]*train_labels.shape[1]))
-
-  val_data = jnp.reshape(val_set, (val_set.shape[1]*val_set.shape[3], val_set.shape[0]*val_set.shape[2])) #24, 16*1000
-  val_ydata = jnp.reshape(val_labels, (val_labels.shape[0]*val_labels.shape[1]))
-  
-  x_test, y_test = shuffling(test_data, test_ydata)
-  x_val, y_val = shuffling(val_data, val_ydata)
-  x_train, y_train = shuffling(train_data, train_ydata)
-  
-  """  # reshape to take off the last dimension
-    test_data = jnp.reshape(test_set, (test_set.shape[0]*test_set.shape[2], test_set.shape[1]))
-    test_ydata = jnp.reshape(test_labels, (test_labels.shape[0]*test_labels.shape[1]))
-
-    train_data = jnp.reshape(train_set, (train_set.shape[0]*train_set.shape[2], train_set.shape[1]))
-    train_ydata = jnp.reshape(train_labels, (train_labels.shape[0]*train_labels.shape[1]))
-
-    val_data = jnp.reshape(val_set, (val_set.shape[0]*val_set.shape[2], val_set.shape[1]))
-    val_ydata = jnp.reshape(val_labels, (val_labels.shape[0]*val_labels.shape[1]))"""
-
-
-  """  # Split the validation and training sets
-    x_train, x_val, y_train, y_val = train_test_split(train_data, 
-                                                      train_ydata, 
-                                                      test_size=val_size, 
-                                                      #random_state=seed, 
-                                                      shuffle=True, 
-                                                      stratify=train_ydata)"""
-
-  
-  return x_train, x_val, x_test, to_categorical(y_train, n_classes=n_classes), to_categorical(y_val, n_classes=n_classes), to_categorical(y_test, n_classes=n_classes)
+def splitting_per_trial(data, labels, split_train, split_val, split_test, trial_gab, n_classes):
+    x_train = []
+    y_train = []
+    x_test = []
+    y_test = []
+    x_val = []
+    y_val = []
+    all_idxs = jnp.array(trial_gab) #gabarito dos trials por linha
+    for trial in split_train:
+      x_train.append(data[all_idxs==trial]) #appendo os dados onde bate o valor com o do trial do split
+      y_train.append(labels[all_idxs==trial]) #msm coisa
+    for trial in split_test:
+      x_test.append(data[all_idxs==trial])
+      y_test.append(labels[all_idxs==trial])
+    for trial in split_val:
+      x_val.append(data[all_idxs==trial])
+      y_val.append(labels[all_idxs==trial])
+      
+    y_train_array = jnp.concatenate(y_train, axis=0)
+    y_val_array = jnp.concatenate(y_val, axis=0)
+    y_test_array = jnp.concatenate(y_test, axis=0)
+    if x_val == []:
+      return jnp.concatenate(x_train, axis=0),jnp.concatenate(x_test, axis=0), to_categorical(y_train_array, n_classes=n_classes), to_categorical(y_test_array, n_classes=n_classes)
+    else:
+      return jnp.concatenate(x_train, axis=0), jnp.concatenate(x_val, axis=0), jnp.concatenate(x_test, axis=0), to_categorical(y_train_array, n_classes=n_classes), to_categorical(y_val_array,n_classes=n_classes), to_categorical(y_test_array, n_classes=n_classes)

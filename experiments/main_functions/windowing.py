@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-def windowing(data, labels, window, overlap):
+def windowing(data, window, overlap):
     """
     Function to perform windowing on a signal.
 
@@ -15,17 +15,18 @@ def windowing(data, labels, window, overlap):
     
     N = data.shape[2]
     sampling_frequency = 250 #Hz
-    t = jnp.arange(0,N) / sampling_frequency # 0 to 6 s
+    #t = jnp.arange(0,N) / sampling_frequency # 0 to 6 s
    
     num_windows = (N - (window*sampling_frequency)) // (window*sampling_frequency - overlap*sampling_frequency) + 1
     windows = []
-    labels_samples = []
-    for i in range(num_windows):
+
+    for i in range(num_windows): # janelas
         start = i * (window*sampling_frequency - overlap*sampling_frequency)
         end = start + window*sampling_frequency
+        print(start, end)
         sample = data[:, :, start:end, :]
         windows.append(sample)
-        labels_samples.append(labels)
-    samples = jnp.concatenate(windows, axis=1)
-    nlabels = jnp.concatenate(labels_samples, axis=1)
-    return samples, nlabels
+            
+    samples = jnp.concatenate(windows, axis=3)
+            
+    return samples

@@ -16,4 +16,4 @@ def dataDFT(data):
     # implement normalization if needed
     norm_fourier = jnp.abs(fourier_data)
     
-    return norm_fourier.at[:,:,:data.shape[2]//2].get() / (data.shape[2]) 
+    return norm_fourier #norm_fourier.at[:,:,:data.shape[2]//2,:].get() / (data.shape[2])
