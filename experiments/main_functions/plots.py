@@ -28,10 +28,10 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
 
   # Calculate the Hartley transform from the real and imaginary parts of the Fourier transform
   hartley_transform0 = jnp.real(fft_signal) - jnp.imag(fft_signal)
+  #hartley_transform0 = jnp.arcsinh(hartley_transform0)
   hartley_transform0 = jnp.abs(hartley_transform0)
-  #hartley_transform0 = filtro_CAR(hartley_transform0)
 
-  #f,Pxx = welch(input_signal,sampling_frequency)
+  
 
   if freq_format == True:
     # Create subplots

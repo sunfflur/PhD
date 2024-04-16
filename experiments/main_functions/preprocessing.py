@@ -39,15 +39,10 @@ def dataprocessing(data, n_levels: int, band_width: int, transform: str, window:
         #print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)
-    print("grouped shape:", groupeddata.shape)
     norm_groupeddata = NormalizeData(groupeddata)  # groupeddata (16, 4, 1498, 12)
     
+    # mapping labels 
     creating_labels = create_labels(dataw)
     tx, mapped_labels, trial_number = get_correct_data(norm_groupeddata, creating_labels)
-    
-    # mapping the labels 
-    """flattened = labelsw.flatten()
-    encoding_values = LabelEncoder().fit_transform(flattened)
-    mapped_labels = encoding_values.reshape(labelsw.shape)"""
     
     return tx, mapped_labels, trial_number #(144, 13, 500), (144,)

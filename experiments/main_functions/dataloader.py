@@ -52,6 +52,7 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
         
       else:
         EEG = np.reshape(data[:,:,ii[1],trial],(64, 1, 1500-(start-end),1))
+
     else:
       #EEG = filtro_CAR(np.reshape(data[:,start:end,ii[1],:],(64,1500-(start-end),6)))
       if start != 0:
@@ -68,20 +69,23 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
       #índice correspondente ao eletrodo que queremos analisar (61 = eletrodo Oz, 55 = POz)
       id_ele = electrode #61
       #captura do sinal de EEG
-      sinal = EEG[id_ele,:]
+      sinal = EEG[id_ele,...][0]
       label = jnp.ones((sinal.shape[0],1))*f
       sinais.append(sinal)
       labels.append(label)
     elif type(electrode) == str:
-      sinal = EEG#[:,:]
+      sinal = EEG#[:,:] #64,1,1500,1
       label = jnp.ones((sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label) 
     else:
       #sinal = EEG[:,:]
-      sinal = EEG[list(electrode),:]
+      sinal = EEG[list(electrode),:] #N, 1, 1500, 1
+
       label = jnp.ones((sinal.shape[1], sinal.shape[3]))*f
       sinais.append(sinal)
       labels.append(label) 
 
-  return filtro_CAR(jnp.concatenate(sinais, axis=1)), jnp.concatenate(labels, axis=0)
+  sinal_concat = jnp.concatenate(sinais, axis=1)
+  labels_concat = jnp.concatenate(labels, axis=0)
+  return filtro_CAR(sinal_concat), labels_concat
