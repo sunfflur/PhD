@@ -3,6 +3,7 @@ import jax.numpy as jnp
 from main_functions.utils import to_categorical, shuffling
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+
 seed=0
   
 def splitting(data, labels, test_size, val_size, n_classes):
@@ -38,10 +39,8 @@ def splitting_per_trial(data, labels, split_train, split_val, split_test, trial_
       x_val.append(data[all_idxs==trial])
       y_val.append(labels[all_idxs==trial])
       
-    y_train_array = jnp.concatenate(y_train, axis=0)
-    y_val_array = jnp.concatenate(y_val, axis=0)
-    y_test_array = jnp.concatenate(y_test, axis=0)
+
     if x_val == []:
-      return jnp.concatenate(x_train, axis=0),jnp.concatenate(x_test, axis=0), to_categorical(y_train_array, n_classes=n_classes), to_categorical(y_test_array, n_classes=n_classes)
+      return jnp.concatenate(x_train, axis=0),jnp.concatenate(x_test, axis=0), to_categorical(jnp.concatenate(y_train, axis=0), n_classes=n_classes), to_categorical(jnp.concatenate(y_test, axis=0), n_classes=n_classes)
     else:
-      return jnp.concatenate(x_train, axis=0), jnp.concatenate(x_val, axis=0), jnp.concatenate(x_test, axis=0), to_categorical(y_train_array, n_classes=n_classes), to_categorical(y_val_array,n_classes=n_classes), to_categorical(y_test_array, n_classes=n_classes)
+      return jnp.concatenate(x_train, axis=0), jnp.concatenate(x_val, axis=0), jnp.concatenate(x_test, axis=0), to_categorical(jnp.concatenate(y_train, axis=0), n_classes=n_classes), to_categorical(jnp.concatenate(y_val, axis=0),n_classes=n_classes), to_categorical(jnp.concatenate(y_test, axis=0), n_classes=n_classes)

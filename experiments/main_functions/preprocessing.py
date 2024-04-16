@@ -3,7 +3,7 @@ from main_functions.slicing import dataslicing
 from main_functions.pooling import datapooling
 from main_functions.DHT import dataDHT
 from main_functions.DFT import dataDFT
-from main_functions.utils import NormalizeData
+from main_functions.utils import NormalizeData_, NormalizeData
 from main_functions.windowing import windowing
 from sklearn.preprocessing import LabelEncoder
 
@@ -39,8 +39,8 @@ def dataprocessing(data, n_levels: int, band_width: int, transform: str, window:
         #print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)
-    #print(groupeddata.shape)
-    norm_groupeddata = NormalizeData(groupeddata) #groupeddata
+    print("grouped shape:", groupeddata.shape)
+    norm_groupeddata = NormalizeData(groupeddata)  # groupeddata (16, 4, 1498, 12)
     
     creating_labels = create_labels(dataw)
     tx, mapped_labels, trial_number = get_correct_data(norm_groupeddata, creating_labels)

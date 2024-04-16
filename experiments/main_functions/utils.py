@@ -5,14 +5,15 @@ import jax
 import jax.numpy as jnp
 import subprocess
 from flax import linen as nn
+from sklearn.preprocessing import MinMaxScaler
 
 def shuffling(x_test, y_test):
     k = np.random.randint(1000)
     idx_test = jax.random.permutation(jax.random.PRNGKey(k), x_test.shape[0])
     return x_test[idx_test], y_test[idx_test]
 
-def NormalizeData(X, min=0, max=1):
-    
+def NormalizeData(X, min=0, max=1, axis=2):
+    # not using yet
     """
     Converts data to the interval 0-1.
 
@@ -24,11 +25,33 @@ def NormalizeData(X, min=0, max=1):
     Returns:
     - Array of the same dimension as X normalized between min and max values.
     """
-    # data now has shape (16, 4, 1000, 6)
-    X_std = (X - jnp.min(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1])) / (jnp.max(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]) - jnp.min(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]))
-    X_scaled = X_std * (max - min) + min
-    
+    # data now has shape (16, 4, 1000, 6) >>>>>>> (144, 13*500)
+    min_vals = jnp.min(X,axis=axis, keepdims=True)
+    max_vals = jnp.max(X, axis=axis, keepdims=True)
+    X_std = jnp.divide(X-min_vals,max_vals - min_vals)
+    X_scaled = X_std * (max-min) + min
+    #X_std = (X - jnp.min(X,axis=axis).reshape(X.shape[0],X.shape[1],1,X.shape[-1])) / (jnp.max(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]) - jnp.min(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]))
+    #X_std = X - jnp.min(X, axis=axis)
+    #X_scaled = X_std * (max - min) + min
+    #min_vals = np.min(X, axis=axis)
+    #max_vals = np.max(X, axis=axis)
+    #normalized_data = (X - min_vals) / (max_vals - min_vals)
+    #return normalized_data
     return X_scaled
+
+def NormalizeData_(data):
+    # Reshape the data to make it 2D while preserving the other axes
+    reshaped_data = data.reshape((-1, data.shape[2]))
+
+    # Create an instance of MinMaxScaler
+    scaler = MinMaxScaler()
+
+    # Fit the scaler to your data and transform it
+    normalized_data = scaler.fit_transform(reshaped_data)
+
+    # Reshape the normalized data back to its original shape
+    normalized_data = normalized_data.reshape(data.shape)
+    return normalized_data
 
 def to_categorical(labels, n_classes=int):
     """
