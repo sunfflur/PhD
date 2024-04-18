@@ -17,7 +17,7 @@ from main_functions.utils import *
 from data_tsinghua import get_data
 import time
 
-#np.random.seed(11)
+np.random.seed(56)
 
 
 
@@ -71,23 +71,29 @@ sel_electrodes = {
 }
 
 
-# Grid Search performed over the next possibilities
-
-"""stimulif = [8, 10, 12, 15] 
-subjects = np.random.randint(1, 36, 35) 
-learning_rates = jnp.arange(0.004,0.01,0.0005).round(4) 
-opts = ["opt3", "opt4", "opt5"]
-neurons = list(product([8, 16],repeat=2)) # 4 possibilities
-levels_list = [3,2]
-functions = ['DFT', 'DHT']"""
-
-# Configuration based on the top 1 accuracy 
-stimulif = [8, 10, 12, 15] #[8,9.4,10.8,12.2,13.6,15] 
+# Grid Search performed over the next possibilities - running for 1 subject (grid_search_1_DXT_top10_4)
+"""stimulif = [8, 10, 12, 15]
 classes = len(stimulif)
-subjects = [13] #np.random.randint(1, 36, 1) #np.random.randint(1, 36, 35) 
+subjects = [13] #np.random.randint(1, 36, 35) 
 learning_rates = [0.0001, 0.001, 0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095] #[0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095]
-opts = ["opt3", "opt4", "opt5"] # ["opt3", "opt4", "opt5"]
-neurons = list(product([4, 8, 16],repeat=2)) #[[16, 16]]
+opts = ["opt3", "opt4", "opt5", "opt7"] 
+neurons = list(product([4, 8, 16],repeat=2)) 
+levels_list = [1, 2, 3] 
+band_widths = [1, 2] 
+functions = ['DFT', 'DHT'] 
+seconds_off = [0.5] #
+total_trials = jnp.arange(6) # total possible trials
+test_trial = [np.random.randint(6)] # choose one trial to test
+train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
+windows_overlaps = [[2, 1], [3, 1], [3, 2]] """
+
+# Configuration based on the top 1 accuracy - running for 35 subjects (grid_search_35_DXT_top10_4)
+stimulif = [8, 10, 12, 15]  
+classes = len(stimulif)
+subjects = np.random.randint(1, 36, 35)
+learning_rates = [0.0001, 0.001]
+opts = ["opt4", "opt5"] 
+neurons = [[16, 16]] #list(product([16, 32],repeat=2)) #
 levels_list = [1, 2, 3] #[1,2,3] #[3]
 band_widths = [1, 2] #[1, 2]
 functions = ['DFT', 'DHT'] #[DHT]
@@ -95,9 +101,8 @@ seconds_off = [0.5] #[0, 0.5
 total_trials = jnp.arange(6) # total possible trials
 test_trial = [np.random.randint(6)] # choose one trial to test
 train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
-windows = [2, 3] #[2, 3]
-overlaps = [1] #[0, 1]
-windows_overlaps = [[2, 1], [3, 1], [3, 2]] # change window and overlap access
+windows_overlaps = [[2, 1], [3, 1], [3, 2]] # windows and overlaps
+
 
 results = {
     'Function': [],
@@ -158,6 +163,7 @@ for config in configs_list:
     for subject in subjects:
         print('subject:', subject)
         print('function:', f)
+        print('learning_rate:', lrs)
         
         accuracies_per_trial = []
         for trial in train_val_trials:
@@ -165,13 +171,15 @@ for config in configs_list:
             print('val_trial:', trial)
             EPOCHS = 500
             BATCH_SIZE = 10
+            key = jax.random.PRNGKey(device)
+            key, init_key = jax.random.split(key)
+
             x_train, x_val, x_test, y_train, y_val, y_test = get_data(
                 datapath, sel_electrodes, stimulif, subject, 
                 n_levels = levels, band_width=width, transform = f, sec_off = off, 
                 split_test=test_trial, split_val=[trial], split_train=train_trials, 
                 window=wo[0], overlap=wo[1], n_classes=classes)
-            
-            #print(x_train.shape, x_val.shape, x_test.shape, y_train.shape, y_val.shape, y_test.shape)
+
             class FreqLayer(nn.Module):
                 features: int
                 # kernel_init: Callable = nn.initializers.normal()
@@ -372,8 +380,9 @@ for config in configs_list:
                         "dense4": "d-opt",
                     },
                 )
+                opt7 = optax.adam(learning_rate=float(lr))
                 optim_dict = {"opt1":opt1,"opt2":opt2,"opt3":opt3,
-                            "opt4":opt4,"opt5":opt5, "opt6":opt6}
+                            "opt4":opt4,"opt5":opt5, "opt6":opt6, "opt7":opt7}
                 # 4. Create and return initial state from the above information. The `Module.apply` applies a
                 # module method to variables and returns output and modified variables.
                 #opt3 best option lr=0.001
@@ -381,9 +390,6 @@ for config in configs_list:
                     apply_fn=model.apply, params=params, tx=optim_dict[opt]
                 )
 
-            key = jax.random.PRNGKey(device)
-
-            key, init_key = jax.random.split(key)
             state = create_train_state(init_key)
 
             # Lists to record loss and accuracy for each epoch

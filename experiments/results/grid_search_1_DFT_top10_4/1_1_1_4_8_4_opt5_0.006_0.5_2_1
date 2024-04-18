@@ -1,0 +1,2 @@
+,Function,Time_Off,Window,Overlap,Levels,Band_Width,Neuron_Configuration,Optimizer,Learning_Rate,Mean_Accuracy
+0,DFT,0.5,2,1,1,1,"(16, 16)",opt5,0.006,0.55
