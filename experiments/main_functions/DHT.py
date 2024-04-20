@@ -16,4 +16,4 @@ def dataDHT(data):
     # implement normalization if needed
     norm_hartley = jnp.abs(hartley_data)
     
-    return norm_hartley#.at[:,:,:data.shape[2]//2].get() / (data.shape[2]) # /data.shape[1] #data.shape[1]//2
+    return norm_hartley#.at[:,:,:data.shape[2]//2,:].get() #/ (data.shape[2]) # /data.shape[1] #data.shape[1]//2

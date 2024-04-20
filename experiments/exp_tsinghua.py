@@ -90,10 +90,10 @@ windows_overlaps = [[2, 1], [3, 1], [3, 2]] """
 # Configuration based on the top 1 accuracy - running for 35 subjects (grid_search_35_DXT_top10_4)
 stimulif = [8, 10, 12, 15]  
 classes = len(stimulif)
-subjects = np.random.randint(1, 36, 35)
-learning_rates = [0.0001, 0.001]
-opts = ["opt4", "opt5"] 
-neurons = [[16, 16]] #list(product([16, 32],repeat=2)) #
+subjects = [1] #np.random.randint(1, 36, 35)
+learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01]
+opts = ["opt1", "opt4", "opt5", "opt7", "opt8"] 
+neurons = [[16, 16], [8, 16]] #list(product([16, 32],repeat=2)) #
 levels_list = [1, 2, 3] #[1,2,3] #[3]
 band_widths = [1, 2] #[1, 2]
 functions = ['DFT', 'DHT'] #[DHT]
@@ -147,7 +147,7 @@ for config in configs_list:
     width = config[8]
     #End important
     mean_accs = []
-    path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}")
+    path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}_kfold")
     Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
     
     #Important
@@ -381,8 +381,10 @@ for config in configs_list:
                     },
                 )
                 opt7 = optax.adam(learning_rate=float(lr))
+                opt8 = optax.sgd(learning_rate=float(lr), momentum=0.9)
                 optim_dict = {"opt1":opt1,"opt2":opt2,"opt3":opt3,
-                            "opt4":opt4,"opt5":opt5, "opt6":opt6, "opt7":opt7}
+                            "opt4":opt4,"opt5":opt5, "opt6":opt6, 
+                            "opt7":opt7, "opt8":opt8}
                 # 4. Create and return initial state from the above information. The `Module.apply` applies a
                 # module method to variables and returns output and modified variables.
                 #opt3 best option lr=0.001
@@ -493,15 +495,15 @@ for config in configs_list:
                 print(f"Accuracy on randomly selected sample of size {len(random_idx)} is {acc_test*100:.2f} %\n")
                 return acc_test
 
-            test_accuracie = evaluation(x_test, y_test)
-            accuracies_per_trial.append(test_accuracie)
-        print("Accuracies per trial:", jnp.asarray(accuracies_per_trial))
+            #test_accuracie = evaluation(x_test, y_test) # not running yet
+            accuracies_per_trial.append(validation_accuracy[-1])
+        print("Val accuracies per trial:", jnp.asarray(accuracies_per_trial))
         mean_trials = jnp.mean(jnp.asarray(accuracies_per_trial))
         accuracies.append(mean_trials)
         
-    test_mean = jnp.mean(jnp.asarray(accuracies))
-    mean_accs.append(test_mean)
-    print(f"Overall mean test accuracy is {test_mean*100:.2f} %")
+    val_mean = jnp.mean(jnp.asarray(accuracies))
+    mean_accs.append(val_mean)
+    print(f"Overall mean test accuracy is {val_mean*100:.2f} %")
 
     
     data = {
@@ -514,7 +516,7 @@ for config in configs_list:
         'Neuron_Configuration': str(neuron_list),
         'Optimizer': opt,
         'Learning_Rate': str(lrs),
-        'Mean_Accuracy': str(test_mean)
+        'Mean_Accuracy': str(val_mean)
     }
     
     df_cfg = pd.DataFrame.from_dict(data, orient="index").transpose()
