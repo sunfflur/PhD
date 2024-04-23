@@ -35,10 +35,10 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
 
   if freq_format == True:
     # Create subplots
-    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=("Input signal", "Fourier Transform", "Hartley Transform"), )
+    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=(f"Input signal - {stimulus_frequency} Hz", "Fourier Transform", "Hartley Transform"), )
 
     color0 = dict(color='rgb(130, 130, 130)')
-    color1 = dict(color='rgb(0, 158, 128)')
+    color1 = dict(color='rgb(70, 130, 180)') #rgb(0, 158, 128)
     color2 = dict(color='rgb(0, 0, 139)')
 
     # Add the time-domain plot to the first subplot
@@ -88,4 +88,72 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
 
     # Update the layout and display the figure
     fig.update_layout(title='', template='plotly_white')
+    fig.show()
+    
+def plot_slices(data):        
+    data = [data.reshape(1, data.shape[2], 1)]
+    # Define the colors for each level
+    colors = [['skyblue', 'steelblue', 'navy']]  
+
+    # Create a figure with subplots
+    fig = sp.make_subplots(rows=len(data), cols=1, shared_xaxes=True, vertical_spacing=0.05)
+
+    # Add traces for each dataset
+    for i in range(len(data)):
+        # Slice the data into three levels for each dataset
+        level1 = data[i][:, :1500, :]
+        level2 = data[i][:, 1500:1500+(4*375), :]
+        level3 = data[i][:, 1500+(4*375):, :]
+        # Create traces for each level for the current dataset
+        trace1 = go.Scatter(x=np.arange(len(level1[0])), y=level1[0,:,0], mode='lines', name='Level 1', line=dict(color=colors[i][0], width=2))
+        trace2 = go.Scatter(x=np.arange(len(level1[0]), len(level1[0])+len(level2[0])), y=level2[0,:,0], mode='lines', name='Level 2', line=dict(color=colors[i][1], width=2))
+        trace3 = go.Scatter(x=np.arange(len(level1[0])+len(level2[0]), len(data[i][0])), y=level3[0,:,0], mode='lines', name='Level 3', line=dict(color=colors[i][2], width=2))
+
+        # Add traces to the subplot
+        fig.add_trace(trace1, row=i+1, col=1)
+        fig.add_trace(trace2, row=i+1, col=1)
+        fig.add_trace(trace3, row=i+1, col=1)
+
+    # Update layout
+    #fig.update_layout( title_text="Data Comparison", showlegend=True)
+
+    # Show the figure
+    # Update the layout and display the figure
+    fig.update_layout(height=400*len(data), title='Slicing - 3 levels', template='plotly_white')
+    fig.show()
+    
+def plot_coefs(normdht, normdft):    
+    data = [normdht.reshape(1, normdht.shape[2], 1), normdft.reshape(1, normdft.shape[2], 1)]
+
+    # Define the colors for each level
+    colors = [['skyblue', 'steelblue', 'navy'], 
+            ['lightgreen', 'limegreen', 'darkgreen']]  # Add more colors if needed
+
+    # Create a figure with subplots
+    fig = sp.make_subplots(rows=len(data), cols=1, shared_xaxes=True, vertical_spacing=0.05,
+                        subplot_titles=("Fourier Transform", "Hartley Transform"))
+
+    # Add traces for each dataset
+    for i in range(len(data)):
+        # Slice the data into three levels for each dataset
+        level1 = data[i][:, :1500, :]
+        level2 = data[i][:, 1500:1500+(4*375), :]
+        level3 = data[i][:, 1500+(4*375):, :]
+
+        # Create traces for each level for the current dataset
+        trace1 = go.Scatter(x=np.arange(len(level1[0])), y=level1[0,:,0], mode='lines', name='Level 1', line=dict(color=colors[i][0], width=2))
+        trace2 = go.Scatter(x=np.arange(len(level1[0]), len(level1[0])+len(level2[0])), y=level2[0,:,0], mode='lines', name='Level 2', line=dict(color=colors[i][1], width=2))
+        trace3 = go.Scatter(x=np.arange(len(level1[0])+len(level2[0]), len(data[i][0])), y=level3[0,:,0], mode='lines', name='Level 3', line=dict(color=colors[i][2], width=2))
+
+        # Add traces to the subplot
+        fig.add_trace(trace1, row=i+1, col=1)
+        fig.add_trace(trace2, row=i+1, col=1)
+        fig.add_trace(trace3, row=i+1, col=1)
+
+    # Update layout
+    #fig.update_layout( title_text="Data Comparison", showlegend=True)
+
+    # Show the figure
+    # Update the layout and display the figure
+    fig.update_layout(height=400*len(data), title='Coefficients for the nn', template='plotly_white')
     fig.show()

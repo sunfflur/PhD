@@ -7,7 +7,7 @@ from main_functions.preprocessing import dataprocessing
 from main_functions.datasplitting import splitting, splitting_per_trial
 
 
-def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
+def get_data(datapath, sel_electrodes, stimulif, subjects, validation_set=True, **kwargs):
 
     #for s in subjects:
     #print("s:", s)
@@ -50,14 +50,28 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, **kwargs):
         Splits the data into train and test sets using sklearn train_test_plit function.
         Here we take care of shuffling the data and stratify according to the labels set.
     """
-        
-    x_train, x_val, x_test, y_train, y_val, y_test = splitting_per_trial(
-        data=processed_data.reshape(processed_data.shape[0],-1), 
-        labels=processed_labels, 
-        split_train=kwargs.get("split_train", [0,1,3,5]),
-        split_val=kwargs.get("split_val", [2]),
-        split_test=kwargs.get("split_test", [4]),
-        trial_gab=ntrials,
-        n_classes=kwargs.get("n_classes", 6))
     
-    return x_train, x_val, x_test, y_train, y_val, y_test
+    if validation_set == True:
+        
+        x_train, x_val, x_test, y_train, y_val, y_test = splitting_per_trial(
+            data=processed_data.reshape(processed_data.shape[0],-1), 
+            labels=processed_labels, 
+            split_train=kwargs.get("split_train", [0,1,3,5]),
+            split_val=kwargs.get("split_val", [2]),
+            split_test=kwargs.get("split_test", [4]),
+            trial_gab=ntrials,
+            n_classes=kwargs.get("n_classes", 6))
+    
+        return x_train, x_val, x_test, y_train, y_val, y_test
+    
+    else:
+        x_train, x_test, y_train, y_test = splitting_per_trial(
+            data=processed_data.reshape(processed_data.shape[0],-1), 
+            labels=processed_labels, 
+            split_train=kwargs.get("split_train", [0,1,2,3,5]),
+            split_val=kwargs.get("split_val", []),
+            split_test=kwargs.get("split_test", [4]),
+            trial_gab=ntrials,
+            n_classes=kwargs.get("n_classes", 6))
+    
+        return x_train, x_test, y_train, y_test
