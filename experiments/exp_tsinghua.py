@@ -94,7 +94,7 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject (grid_search_1_DXT_top10_4)
     stimulif = [8, 10, 12, 15]  
     classes = len(stimulif)
-    subjects = [1] #np.random.randint(1, 36, 35)
+    subjects = [12] #np.random.randint(1, 36, 35)
     learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01]
     opts = ["opt1", "opt4", "opt5", "opt7", "opt8"] 
     neurons = [[16, 16], [8, 16], [8, 8], [4, 8]] #list(product([16, 32],repeat=2)) #
@@ -151,24 +151,26 @@ if KFold == True:
         width = config[8]
         #End important
         mean_accs = []
-        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}_kfold")
+        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}_kfold12")
         Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
         
-        #Important
-        filename = f"{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
-        save_file_name = os.path.join(path_to_file,filename)
-        if os.path.exists(save_file_name):
-            print(f"{filename} already exists!")
-            continue
-        #End important
         
         accuracies = [] # test accuracies
         
         for subject in subjects:
+
+            filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
+            save_file_name = os.path.join(path_to_file,filename)
+            if os.path.exists(save_file_name):
+                print(f"{filename} already exists!")
+                continue
+
+
             print('subject:', subject)
             print('function:', f)
             print('learning_rate:', lrs)
             
+
             accuracies_per_trial = []
             for trial in train_val_trials:
                 train_trials = sel_trials(train_val_trials, trial)
