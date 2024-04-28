@@ -1,7 +1,13 @@
+import jax
 import numpy as np
+import pandas as pd
 import jax.numpy as jnp
 from scipy.io import loadmat,savemat
+from sklearn.model_selection import train_test_split
 import py7zr
+from main_functions.utils import NormalizeData, to_categorical
+from main_functions.DHT import dataDHT
+
 seed=11
 
 def filtro_CAR(X):
@@ -96,3 +102,54 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
   sinal_concat = jnp.concatenate(sinais, axis=1)
   labels_concat = jnp.concatenate(labels, axis=0)
   return sinal_concat , labels_concat
+
+
+def mnist_dataloader(path, electrodes):
+  train_mnist = pd.read_csv(path+"train.csv")
+  test_mnist = pd.read_csv(path+"test.csv")
+  
+  sets = [train_mnist, test_mnist]
+  
+  # ignoring the train images
+  filtered_columns = [col for col in train_mnist.columns if not col.startswith('label_image')]
+  filtered_df = train_mnist[filtered_columns]
+  
+  # selecting electrodes/channels
+  filtered_channel = [col for col in filtered_df.columns if col.startswith(electrodes)]
+  channel_df = filtered_df[filtered_channel]
+  
+  #getting data from labels 0 and 1
+  df = channel_df[channel_df['label'].isin([0,1])]
+  
+  # Convert to NumPy arrays
+  x_data = jnp.array(df.drop(columns=['label']))
+  labels = jnp.array(df['label'])
+  
+  
+    
+  # ignoring the test images
+  filtered_testcolumns = [col for col in test_mnist.columns if not col.startswith('label_image')]
+  filtered_testdf = test_mnist[filtered_testcolumns]
+  # selecting electrodes/channels
+  filtered_testchannel = [col for col in filtered_testdf.columns if col.startswith(electrodes)]
+  channel_testdf = filtered_testdf[filtered_testchannel]
+  #getting data from labels 0 and 1
+  testdf = channel_testdf[channel_testdf['label'].isin([0,1])]
+  # Convert to NumPy arrays
+  test_data = jnp.array(testdf.drop(columns=['label']))
+  test_labels = jnp.array(testdf['label'])
+
+  
+  x_train = x_data.reshape(x_data.shape[0], x_data.shape[1]//400, -1, 1)
+  y_train = to_categorical(labels, n_classes=2)
+  
+  x_test = test_data.reshape(test_data.shape[0], test_data.shape[1]//400, -1, 1)
+  y_test = to_categorical(test_labels, n_classes=2)
+  
+  
+  # applying the DHT
+  
+  x_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_train)).reshape(x_train.shape[0], -1)
+  test_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_test)).reshape(x_test.shape[0], -1)
+  return x_dhtdata, test_dhtdata, y_train, y_test
+    

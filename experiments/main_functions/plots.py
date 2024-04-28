@@ -1,5 +1,6 @@
-
+import jax
 import numpy as np
+import pandas as pd
 import jax.numpy as jnp
 from jax.numpy.fft import fft, ifft, fftshift
 import plotly.subplots as sp
@@ -7,6 +8,8 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import seaborn as sn
+from main_functions.utils import NormalizeData
+from main_functions.DHT import dataDHT
 
 
 
@@ -156,4 +159,135 @@ def plot_coefs(normdht, normdft):
     # Show the figure
     # Update the layout and display the figure
     fig.update_layout(height=400*len(data), title='Coefficients for the nn', template='plotly_white')
+    fig.show()
+
+
+def plot_mnist(data, label, dhtdata, sampling_frequency):
+    color1 = dict(color='rgb(70, 130, 180)')
+    color2 = dict(color='rgb(0, 0, 139)')
+    color3 = dict(color='rgb(70, 130, 180)')
+
+    # Sampling frequency
+    fs = sampling_frequency  # Hz
+    # Create time array
+    time = jnp.arange(len(data)) / fs
+    frequency = jnp.arange(0,len(data)) * (fs/len(data))
+    # Assuming first_row_with_label_2 is your filtered row
+    fig = sp.make_subplots(rows=3, cols=1)
+
+    for col, value in data.items():
+        fig.add_trace(go.Scatter(x=[col], y=[value], mode='markers', name=col), row=1, col=1)
+    fig.update_xaxes(title_text="Channels", row=1, col=1)
+    fig.update_yaxes(title_text="Amplitude", row=1, col=1)
+        
+    fig.add_trace(go.Scatter(x=time, y=data.values, mode='markers', line=color2), row=2, col=1)
+    fig.update_xaxes(title_text="Time [s]", row=2, col=1)
+    fig.update_yaxes(title_text="Amplitude", row=2, col=1)
+
+    fig.add_trace(go.Scatter(x=frequency, y=dhtdata.reshape(dhtdata.shape[2]), mode="lines", line=color3), row=3, col=1)
+    fig.update_xaxes(title_text="Frequency [Hz]", row=3, col=1)
+    fig.update_yaxes(title_text="Amplitude", row=3, col=1)
+
+    fig.update_traces(showlegend=False)
+    fig.update_layout(height=700, title=f'Data for Label {int(label.iloc[0])}', template="plotly_white")
+    fig.show()
+    
+def plot_alldigits(data, label, dhtdata):
+    dhtdata = dhtdata.reshape(11, dhtdata.shape[2])
+    
+    fs = 200 #sampling_frequency  # Hz
+    time = jnp.arange(data.shape[1]) / fs
+    frequency = jnp.arange(0,data.shape[1]) * (fs/data.shape[1])
+    
+    fig = sp.make_subplots(rows=1, cols=2)
+
+    for i in range(data.values.shape[0]):
+        fig.add_trace(go.Scatter(x=time, y=data.values[i], mode='lines', name=str(label[i])), row=1, col=1)
+        fig.update_xaxes(title_text="Time [s]", row=1, col=1)
+        fig.update_yaxes(title_text="Amplitude", row=1, col=1)
+        
+        fig.add_trace(go.Scatter(x=frequency, y=dhtdata[i], mode="lines", name=str(label[i])), row=1, col=2)
+        fig.update_xaxes(title_text="Frequency [Hz]", row=1, col=2)
+        fig.update_yaxes(title_text="Amplitude", row=1, col=2)
+
+    fig.update_traces(showlegend=True)
+    fig.update_layout(height=400, title=f'Data for all labels', template="plotly_white")
+    fig.show()
+
+
+
+def plot_PCA2D(pcadata, labels):
+
+    # Create a DataFrame for the principal components
+    pc_df = pd.DataFrame(data=pcadata, columns=['PC1', 'PC2'])
+
+    # Concatenate principal components with labels
+    pc_df['label'] = labels.values
+
+    # Define colors for each class
+    colors = {labels.unique()[0]: 'blue', labels.unique()[1]: 'red'}
+
+    # Create traces for each label
+    traces = []
+    for label in pc_df['label'].unique():
+        trace = go.Scatter(
+            x=pc_df[pc_df['label'] == label]['PC1'],
+            y=pc_df[pc_df['label'] == label]['PC2'],
+            mode='markers',
+            name=f'Label {label}',
+            marker=dict(color=colors[label], size=8)
+        )
+        traces.append(trace)
+
+    # Create layout
+    layout = go.Layout(
+        title='PCA of Data with Two Classes',
+        xaxis=dict(title='PC1'),
+        yaxis=dict(title='PC2')
+    )
+
+    # Create figure
+    fig = go.Figure(data=traces, layout=layout)
+
+    # Show plot
+    fig.show()
+
+def plot_PCA3D(pcadata, labels):
+
+    # Create a DataFrame for the principal components
+    pc_df = pd.DataFrame(data=pcadata, columns=['PC1', 'PC2', 'PC3'])
+
+    # Concatenate principal components with labels
+    pc_df['label'] = labels.values
+
+    # Define colors for each class
+    colors = {labels.unique()[0]: 'blue', labels.unique()[1]: 'red'}
+
+    # Create traces for each label
+    traces = []
+    for label in pc_df['label'].unique():
+        trace = go.Scatter3d(
+            x=pc_df[pc_df['label'] == label]['PC1'],
+            y=pc_df[pc_df['label'] == label]['PC2'],
+            z=pc_df[pc_df['label'] == label]['PC3'],
+            mode='markers',
+            name=f'Label {label}',
+            marker=dict(color=colors[label], size=4)
+        )
+        traces.append(trace)
+
+    # Create layout
+    layout = go.Layout(
+        title='PCA of Data with Two Classes',
+        scene=dict(
+            xaxis=dict(title='PC1'),
+            yaxis=dict(title='PC2'),
+            zaxis=dict(title='PC3')
+        )
+    )
+
+    # Create figure
+    fig = go.Figure(data=traces, layout=layout)
+
+    # Show plot
     fig.show()
