@@ -15,6 +15,7 @@ from flax.core import frozen_dict
 import matplotlib.pyplot as plt
 from main_functions.utils import *
 from main_functions.dataloader import mnist_dataloader
+from main_functions.preprocessing import mnist_preprocessing
 from data_tsinghua import get_data
 import time
 
@@ -515,11 +516,11 @@ else:
     #stimulif = [8, 10, 12, 15] 
     classes = 2
     subjects = [1] 
-    learning_rates = [0.0001, 0.001, 0.0040] # DHT=[0.01]
-    opts = ["opt1","opt3", "opt4", "opt5", "opt7"]
-    neurons = [[4, 4]] 
-    levels_list = [1] 
-    band_widths = [1] 
+    learning_rates = [0.001, 0.0040, 0.01] # DHT=[0.01]
+    opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"]
+    neurons = [[2, 4], [4, 4]] 
+    levels_list = [1, 2, 3] 
+    band_widths = [1, 2, 3] 
     functions = ['DHT'] #[DHT]
     seconds_off = [0.0] #[0, 0.5
     #total_trials = jnp.arange(6) # total possible trials
@@ -592,7 +593,11 @@ else:
             key = jax.random.PRNGKey(device)
             key, init_key = jax.random.split(key)
 
-            x_train, x_test, y_train, y_test = mnist_dataloader(datapath, electrodes=a)
+            eegdatatrain, eegdatatest, y_train, y_test = mnist_dataloader(datapath, electrodes=a)
+            x_train =  mnist_preprocessing(data=eegdatatrain, sampling_frequency=200, n_levels=levels, band_width=width,
+                                           transform=f, window=wo[0], overlap=wo[1])
+            x_test = mnist_preprocessing(data=eegdatatest, sampling_frequency=200, n_levels=levels, band_width=width,
+                                           transform=f, window=wo[0], overlap=wo[1])
             
             class FreqLayer(nn.Module):
                 features: int

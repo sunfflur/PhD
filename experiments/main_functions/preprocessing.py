@@ -25,8 +25,8 @@ def get_correct_data(data, label, num_trial=6):
     
     return jnp.concatenate(tx, axis=0), jnp.array(y_data), trial_number
 
-def dataprocessing(data, n_levels: int, band_width: int, transform: str, window: int, overlap:int):
-    dataw = windowing(data, window=window, overlap=overlap)
+def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int, transform: str, window: int, overlap:int):
+    dataw = windowing(data, sampling_frequency=sampling_frequency, window=window, overlap=overlap)
     eegdata_sliced = dataslicing(data=dataw, levels=n_levels)
     #print(len(eegdata_sliced)) #21
     grouped = []
@@ -46,3 +46,22 @@ def dataprocessing(data, n_levels: int, band_width: int, transform: str, window:
     tx, mapped_labels, trial_number = get_correct_data(norm_groupeddata, creating_labels)
     
     return tx, mapped_labels, trial_number #(144, 13, 500), (144,)
+
+def mnist_preprocessing(data, sampling_frequency: int, n_levels: int, band_width: int, transform: str, window: int, overlap: int):
+    dataw = windowing(data, sampling_frequency=sampling_frequency, window=window, overlap=overlap)
+    eegdata_sliced = dataslicing(data=dataw, levels=n_levels)
+    #print(len(eegdata_sliced)) #21
+    grouped = []
+    for block in range(len(eegdata_sliced)):
+        if transform == 'DHT':
+            functiondata = dataDHT(eegdata_sliced[block])
+        elif transform == 'DFT':
+            functiondata = dataDFT(eegdata_sliced[block])
+        datapool = datapooling(functiondata, axis=2, width=band_width)
+        #print(datapool.shape) #
+        grouped.append(datapool)
+    groupeddata = jnp.concatenate(grouped, axis=2)
+    norm_groupeddata = NormalizeData(groupeddata)  # groupeddata (16, 4, 1498, 12)
+    norm_groupeddatar = norm_groupeddata.reshape(norm_groupeddata.shape[0], -1)
+    return norm_groupeddatar
+    

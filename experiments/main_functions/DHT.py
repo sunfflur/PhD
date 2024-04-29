@@ -1,7 +1,8 @@
+import jax
 import jax.numpy as jnp
 from jax.numpy.fft import fft
 
-
+@jax.jit
 def dataDHT(data):
     """
     

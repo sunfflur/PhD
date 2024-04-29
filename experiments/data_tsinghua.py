@@ -38,6 +38,7 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, validation_set=True, 
     """
     processed_data, processed_labels, ntrials = dataprocessing(
         data=eegdata,
+        sampling_frequency=kwargs.get("sampling_frequency", 250),
         n_levels=kwargs.get("n_levels", 3),
         band_width=kwargs.get("band_width", 1),
         transform=kwargs.get("transform", "DHT"),

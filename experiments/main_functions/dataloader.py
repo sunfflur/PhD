@@ -124,8 +124,6 @@ def mnist_dataloader(path, electrodes):
   # Convert to NumPy arrays
   x_data = jnp.array(df.drop(columns=['label']))
   labels = jnp.array(df['label'])
-  
-  
     
   # ignoring the test images
   filtered_testcolumns = [col for col in test_mnist.columns if not col.startswith('label_image')]
@@ -140,16 +138,18 @@ def mnist_dataloader(path, electrodes):
   test_labels = jnp.array(testdf['label'])
 
   
-  x_train = x_data.reshape(x_data.shape[0], x_data.shape[1]//400, -1, 1)
+  x_train = x_data.reshape(x_data.shape[0], x_data.shape[1]//400, -1, 1) #200,16,400,1
+  x_train = x_train - np.mean(x_train, axis=1, keepdims=True)
   y_train = to_categorical(labels, n_classes=2)
   
   x_test = test_data.reshape(test_data.shape[0], test_data.shape[1]//400, -1, 1)
+  x_test = x_test - np.mean(x_test, axis=1, keepdims=True)
   y_test = to_categorical(test_labels, n_classes=2)
   
   
   # applying the DHT
   
-  x_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_train)).reshape(x_train.shape[0], -1)
-  test_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_test)).reshape(x_test.shape[0], -1)
-  return x_dhtdata, test_dhtdata, y_train, y_test
+  #x_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_train)).reshape(x_train.shape[0], -1)
+  #test_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_test)).reshape(x_test.shape[0], -1)
+  return x_train, x_test, y_train, y_test
     
