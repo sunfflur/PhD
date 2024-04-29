@@ -514,12 +514,13 @@ else:
     print("Final MNIST training")    
     # Configuration based on the top 1 accuracy - running for 35 subjects (final_35_DHT_top10_4)
     #stimulif = [8, 10, 12, 15] 
-    classes = 2
+    classes = [0,1,2,3,4,5,6,7,8,9]
+    n_classes = len(classes)
     subjects = [1] 
     learning_rates = [0.001, 0.0040, 0.01] # DHT=[0.01]
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"]
-    neurons = [[2, 4], [4, 4]] 
-    levels_list = [1, 2, 3] 
+    neurons = [[4, 4]] #[2, 4],
+    levels_list = [1, 2] 
     band_widths = [1, 2, 3] 
     functions = ['DHT'] #[DHT]
     seconds_off = [0.0] #[0, 0.5
@@ -560,7 +561,7 @@ else:
     for config in final_configs_list:
         #Important
         neuron1 = 1
-        neuron4 = classes
+        neuron4 = n_classes
         levels = config[0]
         neuron2, neuron3 = config[1]
         opt = config[2]
@@ -572,7 +573,7 @@ else:
         width = config[8]
         #End important
         mean_accs = []
-        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"mnist_{len(subjects)}_{f}_top1_{classes}")
+        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"mnist_{len(subjects)}_{f}_top1_{n_classes}")
         Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
         
         
@@ -593,7 +594,7 @@ else:
             key = jax.random.PRNGKey(device)
             key, init_key = jax.random.split(key)
 
-            eegdatatrain, eegdatatest, y_train, y_test = mnist_dataloader(datapath, electrodes=a)
+            eegdatatrain, eegdatatest, y_train, y_test = mnist_dataloader(datapath, electrodes=a, classes=classes)
             x_train =  mnist_preprocessing(data=eegdatatrain, sampling_frequency=200, n_levels=levels, band_width=width,
                                            transform=f, window=wo[0], overlap=wo[1])
             x_test = mnist_preprocessing(data=eegdatatest, sampling_frequency=200, n_levels=levels, band_width=width,

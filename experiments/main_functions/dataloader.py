@@ -104,11 +104,11 @@ def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
   return sinal_concat , labels_concat
 
 
-def mnist_dataloader(path, electrodes):
+def mnist_dataloader(path, electrodes, classes: list):
   train_mnist = pd.read_csv(path+"train.csv")
   test_mnist = pd.read_csv(path+"test.csv")
   
-  sets = [train_mnist, test_mnist]
+  #sets = [train_mnist, test_mnist]
   
   # ignoring the train images
   filtered_columns = [col for col in train_mnist.columns if not col.startswith('label_image')]
@@ -118,8 +118,8 @@ def mnist_dataloader(path, electrodes):
   filtered_channel = [col for col in filtered_df.columns if col.startswith(electrodes)]
   channel_df = filtered_df[filtered_channel]
   
-  #getting data from labels 0 and 1
-  df = channel_df[channel_df['label'].isin([0,1])]
+  #getting data from labels 0 and 1 or 0 to 9
+  df = channel_df[channel_df['label'].isin(classes)]
   
   # Convert to NumPy arrays
   x_data = jnp.array(df.drop(columns=['label']))
@@ -132,7 +132,7 @@ def mnist_dataloader(path, electrodes):
   filtered_testchannel = [col for col in filtered_testdf.columns if col.startswith(electrodes)]
   channel_testdf = filtered_testdf[filtered_testchannel]
   #getting data from labels 0 and 1
-  testdf = channel_testdf[channel_testdf['label'].isin([0,1])]
+  testdf = channel_testdf[channel_testdf['label'].isin(classes)]
   # Convert to NumPy arrays
   test_data = jnp.array(testdf.drop(columns=['label']))
   test_labels = jnp.array(testdf['label'])
@@ -140,11 +140,11 @@ def mnist_dataloader(path, electrodes):
   
   x_train = x_data.reshape(x_data.shape[0], x_data.shape[1]//400, -1, 1) #200,16,400,1
   x_train = x_train - np.mean(x_train, axis=1, keepdims=True)
-  y_train = to_categorical(labels, n_classes=2)
+  y_train = to_categorical(labels, n_classes=len(classes))
   
   x_test = test_data.reshape(test_data.shape[0], test_data.shape[1]//400, -1, 1)
   x_test = x_test - np.mean(x_test, axis=1, keepdims=True)
-  y_test = to_categorical(test_labels, n_classes=2)
+  y_test = to_categorical(test_labels, n_classes=len(classes))
   
   
   # applying the DHT
