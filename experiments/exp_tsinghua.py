@@ -94,18 +94,18 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject (grid_search_1_DXT_top10_4)
     stimulif = [8, 10, 12, 15]  
     classes = len(stimulif)
-    subjects = [12] #np.random.randint(1, 36, 35)
-    learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01]
-    opts = ["opt1", "opt4", "opt5", "opt7", "opt8"] 
-    neurons = [[16, 16], [8, 16], [8, 8], [4, 8]] #list(product([16, 32],repeat=2)) #
-    levels_list = [1, 2, 3] #[1,2,3] #[3]
-    band_widths = [1, 2] #[1, 2]
-    functions = ['DFT', 'DHT'] #[DHT]
-    seconds_off = [0.5] #[0, 0.5
+    subjects = [25, 19, 29, 24, 10, 17, 7, 15, 23, 9, 3, 18, 33, 2, 11]#[12] 
+    learning_rates = [0.0001, 0.0002, 0.001, 0.004] #0.01
+    opts = ["opt4", "opt5", "opt7", "opt8"] #"opt1",
+    neurons = [[8, 8], [4, 8]] # [16, 16], [8, 16], #list(product([16, 32],repeat=2)) 
+    levels_list = [1, 2, 3] 
+    band_widths = [1, 2] 
+    functions = ['DHT'] #[DHT]
+    seconds_off = [0.5] 
     total_trials = jnp.arange(6) # total possible trials
     test_trial = [np.random.randint(6)] # choose one trial to test
     train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
-    windows_overlaps = [[2, 1], [3, 1], [3, 2]] # windows and overlaps
+    windows_overlaps = [[3, 1], [3, 2]] #[2, 1], # windows and overlaps
 
 
     results = {
@@ -151,13 +151,14 @@ if KFold == True:
         width = config[8]
         #End important
         mean_accs = []
-        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}_kfold12")
-        Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
+        
         
         
         accuracies = [] # test accuracies
         
         for subject in subjects:
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}_kfold{subject}")
+            Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
 
             filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
             save_file_name = os.path.join(path_to_file,filename)
