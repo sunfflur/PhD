@@ -507,27 +507,27 @@ if KFold == True:
             print("Val accuracies per trial:", jnp.asarray(accuracies_per_trial))
             mean_trials = jnp.mean(jnp.asarray(accuracies_per_trial))
             accuracies.append(mean_trials)
-        val_mean = jnp.mean(jnp.asarray(accuracies))
-        mean_accs.append(val_mean)
-        print(f"Overall mean test accuracy is {val_mean*100:.2f} %")
 
         
-        data = {
-            'Function': f,
-            'Time_Off': str(off),
-            'Window': str(wo[0]),
-            'Overlap': str(wo[1]),
-            'Levels': str(levels),
-            'Band_Width': str(width),
-            'Neuron_Configuration': str(neuron_list),
-            'Optimizer': opt,
-            'Learning_Rate': str(lrs),
-            'Mean_Accuracy': str(val_mean)
-        }
-        
-        df_cfg = pd.DataFrame.from_dict(data, orient="index").transpose()
-        df_cfg.to_csv(save_file_name)
+            data = {
+                'Function': f,
+                'Time_Off': str(off),
+                'Window': str(wo[0]),
+                'Overlap': str(wo[1]),
+                'Levels': str(levels),
+                'Band_Width': str(width),
+                'Neuron_Configuration': str(neuron_list),
+                'Optimizer': opt,
+                'Learning_Rate': str(lrs),
+                'Mean_Accuracy': str(mean_trials)
+            }
+            
+            df_cfg = pd.DataFrame.from_dict(data, orient="index").transpose()
+            df_cfg.to_csv(save_file_name)
 
+        mean_subjects = jnp.mean(jnp.asarray(accuracies)) # mean of all subjects
+        #mean_accs.append(val_mean)
+        print(f"Overall mean test accuracy is {mean_subjects*100:.2f} %")
 
 else:        
     print("Final training")    
