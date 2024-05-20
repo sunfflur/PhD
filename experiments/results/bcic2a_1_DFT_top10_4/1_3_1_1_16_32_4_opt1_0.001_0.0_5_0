@@ -1,0 +1,2 @@
+,Subject,Function,Time_Off,Window,Overlap,Levels,Band_Width,Neuron_Configuration,Optimizer,Learning_Rate,Test_Accuracy
+0,1,DFT,0.0,5,0,3,1,"[16, 32]",opt1,0.001,0.5972222

@@ -1,4 +1,5 @@
 import jax
+import os
 import numpy as np
 import pandas as pd
 import jax.numpy as jnp
@@ -7,11 +8,16 @@ from sklearn.model_selection import train_test_split
 import py7zr
 from main_functions.utils import NormalizeData, to_categorical
 from main_functions.DHT import dataDHT
+np.int = int
+np.bool = bool
+np.object = object
+from braindecode.datasets import BCICompetitionIVDataset4, BNCI2014001
+from braindecode.preprocessing import create_windows_from_events
 
 seed=11
 
-def filtro_CAR(X):
-  return X - np.mean(X,axis=0,keepdims=True)
+def filtro_CAR(X, axis=0):
+  return X - np.mean(X,axis=axis,keepdims=True)
 
 
 def dataloader(subject, electrode, stimulus_frequency, trial, sec_off, path):
@@ -138,11 +144,11 @@ def mnist_dataloader(path, electrodes, classes: list):
   test_labels = jnp.array(testdf['label'])
 
   
-  x_train = x_data.reshape(x_data.shape[0], x_data.shape[1]//400, -1, 1) #200,16,400,1
-  x_train = x_train - np.mean(x_train, axis=1, keepdims=True)
+  x_train = filtro_CAR(x_data.reshape(x_data.shape[0], x_data.shape[1]//400, -1, 1), axis=1) #200,16,400,1
+  #x_train = x_train - np.mean(x_train, axis=1, keepdims=True)
   y_train = to_categorical(labels, n_classes=len(classes))
   
-  x_test = test_data.reshape(test_data.shape[0], test_data.shape[1]//400, -1, 1)
+  x_test = filtro_CAR(test_data.reshape(test_data.shape[0], test_data.shape[1]//400, -1, 1), axis=1)
   x_test = x_test - np.mean(x_test, axis=1, keepdims=True)
   y_test = to_categorical(test_labels, n_classes=len(classes))
   
@@ -152,4 +158,59 @@ def mnist_dataloader(path, electrodes, classes: list):
   #x_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_train)).reshape(x_train.shape[0], -1)
   #test_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_test)).reshape(x_test.shape[0], -1)
   return x_train, x_test, y_train, y_test
-    
+  
+def BCIC_dataloader(subject, trial_start_offset_seconds, trial_stop_offset_seconds, path):
+  os.environ['MNE_DATA'] = path
+  subject_id = subject
+  dataset = BNCI2014001(subject_ids=[subject_id])
+  
+  raw = dataset.datasets[0].raw
+
+  # Get the channel names
+  channel_names = raw.info['ch_names']
+  #print(f'Channel names: {channel_names}')
+
+  # Get only the signals, ignoring the targets
+  signal_channels = [ch for ch in channel_names if not ch.startswith(('EOG1', 'EOG2', 'EOG3', 'stim'))]
+  #print(f'Signal channels: {signal_channels}')
+
+  # Create a new raw object with only signal channels
+  #raw_signals = raw.copy().pick(signal_channels)
+  
+  #trial_start_offset_seconds = trial_start_offset_seconds #-0.5
+  # Extract sampling frequency, check that they are same in all datasets
+  sfreq = raw.info["sfreq"]
+  assert all([ds.raw.info["sfreq"] == sfreq for ds in dataset.datasets])
+  
+  # Calculate the window start offset in samples.
+  trial_start_offset_samples = int(trial_start_offset_seconds * sfreq)
+  trial_stop_offset_samples = int(trial_stop_offset_seconds * sfreq)
+
+  # Create windows using braindecode function for this. It needs parameters to
+  # define how windows should be used.
+  windows_dataset = create_windows_from_events(
+      dataset,
+      trial_start_offset_samples=trial_start_offset_samples,
+      trial_stop_offset_samples=trial_stop_offset_samples,
+      preload=True,
+      picks=signal_channels
+  )
+     
+  splitted = windows_dataset.split("session")
+  train_set = splitted["session_T"]  # Session train
+  test_set = splitted["session_E"]  # Session evaluation
+  
+  train_data = []
+  test_data = []
+  for i in range(len(train_set)):
+    x, y, z = train_set[i]
+    m, n, p = test_set[i]
+    train_data.append(x)
+    test_data.append(m)
+  
+  x_train = filtro_CAR(np.expand_dims(np.array(train_data), axis=3), axis=1)
+  y_train = to_categorical(train_set.get_metadata().target.values, n_classes=4)
+  x_test = filtro_CAR(np.expand_dims(np.array(test_data), axis=3), axis=1)
+  y_test = to_categorical(test_set.get_metadata().target.values, n_classes=4)
+  
+  return x_train, x_test, y_train, y_test
