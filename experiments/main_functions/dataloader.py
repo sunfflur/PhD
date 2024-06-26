@@ -125,8 +125,10 @@ def mnist_dataloader(path, electrodes, classes: list):
   channel_df = filtered_df[filtered_channel]
   
   #getting data from labels 0 and 1 or 0 to 9
-  df = channel_df[channel_df['label'].isin(classes)]
-  
+  #df = channel_df[channel_df['label'].isin(classes)]
+  channel_df.loc[channel_df['label'].isin(range(0, 10)), 'label'] = classes[1]
+  channel_df.loc[channel_df['label'].isin([-1]), 'label'] = classes[0]
+  df = channel_df
   # Convert to NumPy arrays
   x_data = jnp.array(df.drop(columns=['label']))
   labels = jnp.array(df['label'])
@@ -138,7 +140,10 @@ def mnist_dataloader(path, electrodes, classes: list):
   filtered_testchannel = [col for col in filtered_testdf.columns if col.startswith(electrodes)]
   channel_testdf = filtered_testdf[filtered_testchannel]
   #getting data from labels 0 and 1
-  testdf = channel_testdf[channel_testdf['label'].isin(classes)]
+  #testdf = channel_testdf[channel_testdf['label'].isin(classes)]
+  channel_testdf.loc[channel_testdf['label'].isin(range(0, 10)), 'label'] = classes[1]
+  channel_testdf.loc[channel_testdf['label'].isin([-1]), 'label'] = classes[0]
+  testdf = channel_testdf
   # Convert to NumPy arrays
   test_data = jnp.array(testdf.drop(columns=['label']))
   test_labels = jnp.array(testdf['label'])
@@ -149,14 +154,9 @@ def mnist_dataloader(path, electrodes, classes: list):
   y_train = to_categorical(labels, n_classes=len(classes))
   
   x_test = filtro_CAR(test_data.reshape(test_data.shape[0], test_data.shape[1]//400, -1, 1), axis=1)
-  x_test = x_test - np.mean(x_test, axis=1, keepdims=True)
+  #x_test = x_test - np.mean(x_test, axis=1, keepdims=True)
   y_test = to_categorical(test_labels, n_classes=len(classes))
   
-  
-  # applying the DHT
-  
-  #x_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_train)).reshape(x_train.shape[0], -1)
-  #test_dhtdata = NormalizeData(jax.jit(dataDHT, device=jax.devices("cpu")[0])(x_test)).reshape(x_test.shape[0], -1)
   return x_train, x_test, y_train, y_test
   
 def BCIC_dataloader(subject, trial_start_offset_seconds, trial_stop_offset_seconds, path):

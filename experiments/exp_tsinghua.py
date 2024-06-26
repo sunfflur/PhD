@@ -15,6 +15,7 @@ from flax.core import frozen_dict
 import matplotlib.pyplot as plt
 from main_functions.utils import *
 from data_tsinghua import get_data
+from functools import partial
 import time
 
 np.random.seed(56)
@@ -72,44 +73,39 @@ sel_electrodes = {
 
 KFold = True
 
+EPOCHS = 500
+BATCH_SIZE = 10
 
 if KFold == True:
     print("Running k-fold cross validation")
     # Grid Search performed over the next possibilities - running for 1 subject (grid_search_1_DXT_top10_4)
-    """stimulif = [8, 10, 12, 15]
-    classes = len(stimulif)
-    subjects = [13] #np.random.randint(1, 36, 35) 
-    learning_rates = [0.0001, 0.001, 0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095] #[0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095]
-    opts = ["opt3", "opt4", "opt5", "opt7"] 
-    neurons = list(product([4, 8, 16],repeat=2)) 
-    levels_list = [1, 2, 3] 
-    band_widths = [1, 2] 
-    functions = ['DFT', 'DHT'] 
-    seconds_off = [0.5] #
-    total_trials = jnp.arange(6) # total possible trials
-    test_trial = [np.random.randint(6)] # choose one trial to test
-    train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
-    windows_overlaps = [[2, 1], [3, 1], [3, 2]] """
-
     # Grid-search K-fold - running for 1 subject (grid_search_1_DXT_top10_4)
     stimulif = [8, 10, 12, 15]  
-    classes = len(stimulif)
-    subjects = [25, 19, 29, 24, 10, 17, 7, 15, 23, 9, 3, 18, 33, 2, 11]#[12] 
-    learning_rates = [0.0001, 0.0002, 0.001, 0.004] #0.01
-    opts = ["opt4", "opt5", "opt7", "opt8"] #"opt1",
-    neurons = [[8, 8], [4, 8]] # [16, 16], [8, 16], #list(product([16, 32],repeat=2)) 
+    n_classes = len(stimulif)
+    subjects = [1]#[12] 
+    learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01] 
+    opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"] #"opt1",
+    neurons = [[8, 8], [4, 8], [16, 16], [8, 16]] # , #list(product([16, 32],repeat=2)) 
     levels_list = [1, 2, 3] 
-    band_widths = [1, 2] 
-    functions = ['DHT'] #[DHT]
+    band_widths = [1, 2, 3, 4, 5] 
+    functions = ['DHT', 'DFT'] #[DHT]
     seconds_off = [0.5] 
     total_trials = jnp.arange(6) # total possible trials
     test_trial = [np.random.randint(6)] # choose one trial to test
     train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
-    windows_overlaps = [[3, 1], [3, 2]] #[2, 1], # windows and overlaps
+    windows_overlaps = [[3, 1], [3, 2], [2, 1]] # windows and overlaps
+    dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
+    freq_means = [2.0, 1.0, 0.0]
+    freq_stds = [0.1, 0.01, 0.001]
 
 
     results = {
         'Function': [],
+        'Epochs': [],
+        'Batch_Size': [],
+        'Dropout': [],
+        'FreqMean': [],
+        'FreqStd': [],
         'Time_Off': [],
         'Window': [],
         'Overlap': [],
@@ -123,15 +119,18 @@ if KFold == True:
 
     configs_list = []
 
-    for wo in windows_overlaps:
-        for off in seconds_off:
-            for f in functions:
-                for levels in levels_list:
-                    for width in band_widths:
-                        for neuron_list in neurons:
-                            for opt in opts:
-                                for lrs in learning_rates:
-                                    configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width))
+    for fstd in freq_stds:
+        for fmean in freq_means:
+            for dp in dropout_taxes:
+                for wo in windows_overlaps:
+                    for off in seconds_off:
+                        for f in functions:
+                            for levels in levels_list:
+                                for width in band_widths:
+                                    for neuron_list in neurons:
+                                        for opt in opts:
+                                            for lrs in learning_rates:
+                                                configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width, dp[0], dp[1], fmean, fstd))
 
     #results_list = []
     #main_df = pd.DataFrame()
@@ -139,7 +138,7 @@ if KFold == True:
     for config in configs_list:
         #Important
         neuron1 = 1
-        neuron4 = classes
+        neuron4 = n_classes
         levels = config[0]
         neuron2, neuron3 = config[1]
         opt = config[2]
@@ -149,18 +148,19 @@ if KFold == True:
         wo[0] = config[6]
         wo[1] = config[7]
         width = config[8]
+        dropout_0 = config[9]
+        dropout_1 = config[10]
+        freq_mean = config[11]
+        freq_std = config[12]
         #End important
         mean_accs = []
-        
-        
-        
         accuracies = [] # test accuracies
         
         for subject in subjects:
-            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}_kfold{subject}")
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"tsinghua_{len(subjects)}_{f}_{n_classes}_kfold_1")
             Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
 
-            filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
+            filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
             save_file_name = os.path.join(path_to_file,filename)
             if os.path.exists(save_file_name):
                 print(f"{filename} already exists!")
@@ -176,8 +176,8 @@ if KFold == True:
             for trial in train_val_trials:
                 train_trials = sel_trials(train_val_trials, trial)
                 print('val_trial:', trial)
-                EPOCHS = 500
-                BATCH_SIZE = 10
+                #EPOCHS = 500
+                #BATCH_SIZE = 10
                 key = jax.random.PRNGKey(device)
                 key, init_key = jax.random.split(key)
 
@@ -185,12 +185,15 @@ if KFold == True:
                     datapath, sel_electrodes, stimulif, subject, validation_set=True,
                     n_levels = levels, band_width=width, transform = f, sec_off = off, 
                     split_test=test_trial, split_val=[trial], split_train=train_trials, 
-                    window=wo[0], overlap=wo[1], n_classes=classes)
+                    window=wo[0], overlap=wo[1], n_classes=n_classes)
 
                 class FreqLayer(nn.Module):
                     features: int
                     # kernel_init: Callable = nn.initializers.normal()
-                    kernel_init: Callable = my_init
+                    freq_mean: Callable = freq_mean
+                    freq_std: Callable = freq_std
+                    my_init2 = partial(my_init, mean=freq_mean, std=freq_std)
+                    kernel_init: Callable = my_init2
 
                     @nn.compact
                     def __call__(self, x):
@@ -222,6 +225,8 @@ if KFold == True:
                     neuron2: Callable = neuron2
                     neuron3: Callable = neuron3
                     neuron4: Callable = neuron4
+                    dropout_0: Callable = dropout_0
+                    dropout_1: Callable = dropout_1
 
                     def setup(self):
                         # Create the modules we need to build the network
@@ -242,18 +247,18 @@ if KFold == True:
                         self.linear4 = nn.Dense(features=self.neuron4, name="dense4")
 
                         # create the dropout modules
-                        self.droput1 = nn.Dropout(0.30, deterministic=True)
-                        self.droput2 = nn.Dropout(0.15, deterministic=True)
+                        self.dropout1 = nn.Dropout(self.dropout_0, deterministic=True) #0.30
+                        self.dropout2 = nn.Dropout(self.dropout_1, deterministic=True)
 
                     # @nn.compact  # Tells Flax to look for defined submodules
                     def __call__(self, x):
                         x = self.linear1(x)
                         x = self.linear2(x)
                         x = nn.leaky_relu(x)
-                        x = self.droput1(x)
+                        x = self.dropout1(x)
                         x = self.linear3(x)
                         x = nn.leaky_relu(x)
-                        x = self.droput2(x)
+                        x = self.dropout2(x)
                         x = self.linear4(x)
                         return x
 
@@ -511,12 +516,17 @@ if KFold == True:
         
             data = {
                 'Function': f,
+                'Epochs': str(EPOCHS),
+                'Batch_Size': str(BATCH_SIZE),
+                'Dropout': str((dropout_0,dropout_1)),
+                'FreqMean': str(freq_mean),
+                'FreqStd': str(freq_std),
                 'Time_Off': str(off),
                 'Window': str(wo[0]),
                 'Overlap': str(wo[1]),
                 'Levels': str(levels),
                 'Band_Width': str(width),
-                'Neuron_Configuration': str(neuron_list),
+                'Neuron_Configuration': str((neuron1,neuron2,neuron3,neuron4)),
                 'Optimizer': opt,
                 'Learning_Rate': str(lrs),
                 'Mean_Accuracy': str(mean_trials)
@@ -919,7 +929,7 @@ else:
                 'Overlap': str(wo[1]),
                 'Levels': str(levels),
                 'Band_Width': str(width),
-                'Neuron_Configuration': str(neuron_list),
+                'Neuron_Configuration': str((neuron1,neuron2,neuron3,neuron4)),
                 'Optimizer': opt,
                 'Learning_Rate': str(lrs),
                 'Test_Accuracy': str(test_accuracy)

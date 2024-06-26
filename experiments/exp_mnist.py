@@ -15,8 +15,9 @@ from flax.core import frozen_dict
 import matplotlib.pyplot as plt
 from main_functions.utils import *
 from main_functions.dataloader import mnist_dataloader
-from main_functions.preprocessing import mnist_preprocessing
-from data_tsinghua import get_data
+from data_mnist import get_data
+#from data_tsinghua import get_data
+from functools import partial
 import time
 
 np.random.seed(56)
@@ -37,61 +38,55 @@ get_gpu_memory_info()
 
 
 """   
-    Dataset from: http://bci.med.tsinghua.edu.cn/
-    Starting with subject 1: S1.mat
+    Dataset from: Visual MNIST of the Brain.
+    Starting with subject 1.
 
 """
 datapath = ("/home/natalia/Git_Projects/PhD/data/")
 
-"""
-    Load data from from different stimulus frequency: 8, 10, 12 and 15 Hertz and
-    choosing 16 electrodes (O1, O2, Oz, POz, Pz, PO3, PO4, PO7, PO8, P1, P2, Cz, C1, C2, CPz, FCz),
-    following Vargas et. al (2022).
-
-"""
 a = ('label', 'O1', 'Oz', 'O2', 'POz', 'Pz', 'PO3', 'PO4',
     'PO7', 'PO8', 'P1', 'P2', 'Cz', 'C1', 'C2', 'CPz', 'FCz')
+b = ('label', 'FP1', 'FP2', 'FPz', 'AF3', 'AFz', 'AF4', 'F7', 
+     'F5', 'F3', 'F1', 'Fz', 'F2', 'F4', 'F6', 'F8', 'FT7', 'FC5',
+     'FC3', 'FC1', 'FCz')
+c = ('label', 'FP1', 'FPz', 'FP2', 'AF3', 'AFz', 'AF4', 'F7', 'F5', 'F3', 
+     'F1', 'Fz', 'F2', 'F4', 'F6', 'F8', 'FT7', 'FC5', 'FC3', 'FC1', 
+     'FCz', 'FC2', 'FC4', 'FC6', 'FT8', 'T7', 'C5', 'C3', 'C1', 'Cz', 
+     'CCPz', 'C2', 'C4', 'C6', 'T8', 'TP7', 'CP5', 'CP3', 'CP1', 'CPz', 
+     'CP2', 'CP4', 'CP6', 'TP8', 'P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 
+     'P6', 'P8', 'PO7', 'PO5', 'PO3', 'POz', 'PO4', 'PO6', 'PO8', 'CB1', 
+     'O1', 'Oz', 'O2', 'CB2')
 
-KFold = False
 
+KFold = True
+EPOCHS = 500
+BATCH_SIZE = 10
 
 if KFold == True:
     print("Running k-fold cross validation")
-    # Grid Search performed over the next possibilities - running for 1 subject (grid_search_1_DXT_top10_4)
-    """stimulif = [8, 10, 12, 15]
-    classes = len(stimulif)
-    subjects = [13] #np.random.randint(1, 36, 35) 
-    learning_rates = [0.0001, 0.001, 0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095] #[0.0040, 0.0045, 0.0060, 0.0065, 0.0080, 0.0085, 0.0095]
-    opts = ["opt3", "opt4", "opt5", "opt7"] 
-    neurons = list(product([4, 8, 16],repeat=2)) 
-    levels_list = [1, 2, 3] 
-    band_widths = [1, 2] 
-    functions = ['DFT', 'DHT'] 
-    seconds_off = [0.5] #
-    total_trials = jnp.arange(6) # total possible trials
-    test_trial = [np.random.randint(6)] # choose one trial to test
-    train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
-    windows_overlaps = [[2, 1], [3, 1], [3, 2]] """
-
     # Grid-search K-fold - running for 1 subject (grid_search_1_DXT_top10_4)
-    stimulif = [8, 10, 12, 15]  
-    classes = len(stimulif)
-    subjects = [12] #np.random.randint(1, 36, 35)
-    learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01]
-    opts = ["opt1", "opt4", "opt5", "opt7", "opt8"] 
-    neurons = [[16, 16], [8, 16], [8, 8], [4, 8]] #list(product([16, 32],repeat=2)) #
-    levels_list = [1, 2, 3] #[1,2,3] #[3]
-    band_widths = [1, 2] #[1, 2]
-    functions = ['DFT', 'DHT'] #[DHT]
-    seconds_off = [0.5] #[0, 0.5
-    total_trials = jnp.arange(6) # total possible trials
-    test_trial = [np.random.randint(6)] # choose one trial to test
-    train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
-    windows_overlaps = [[2, 1], [3, 1], [3, 2]] # windows and overlaps
-
+    classes = [0,1]
+    n_classes = len(classes)
+    subjects = [1] 
+    learning_rates = [0.001, 0.0040, 0.01, 0.0001] 
+    opts = ["opt1", "opt2", "opt3", "opt4", "opt5", "opt7", "opt8"]
+    neurons = [[4, 4], [4, 8], [8, 8], [8, 16], [16,16], [16,32], [32,32]] #[2, 4],
+    levels_list = [1, 2, 3] 
+    band_widths = [1, 2, 3] 
+    functions = ['DHT', 'DFT'] #[DHT]
+    seconds_off = [0.0] #[0, 0.5
+    windows_overlaps = [[2, 0]] # windows and overlaps
+    dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
+    freq_means = [2.0, 1.0, 0.0]
+    freq_stds = [0.1, 0.01, 0.001]
 
     results = {
         'Function': [],
+        'Epochs': [],
+        'Batch_Size': [],
+        'Dropout': [],
+        'FreqMean': [],
+        'FreqStd': [],
         'Time_Off': [],
         'Window': [],
         'Overlap': [],
@@ -100,28 +95,30 @@ if KFold == True:
         'Neuron_Configuration': [],
         'Optimizer': [],
         'Learning_Rate': [],
+        'Training_Time': [],
         'Mean_Accuracy': []
     }
 
     configs_list = []
+    for fstd in freq_stds:
+        for fmean in freq_means:
+            for dp in dropout_taxes:
+                for wo in windows_overlaps:
+                    for off in seconds_off:
+                        for f in functions:
+                            for levels in levels_list:
+                                for width in band_widths:
+                                    for neuron_list in neurons:
+                                        for opt in opts:
+                                            for lrs in learning_rates:
+                                                configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width, dp[0], dp[1], fmean, fstd))
 
-    for wo in windows_overlaps:
-        for off in seconds_off:
-            for f in functions:
-                for levels in levels_list:
-                    for width in band_widths:
-                        for neuron_list in neurons:
-                            for opt in opts:
-                                for lrs in learning_rates:
-                                    configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width))
 
-    #results_list = []
-    #main_df = pd.DataFrame()
     np.random.shuffle(configs_list)
     for config in configs_list:
         #Important
         neuron1 = 1
-        neuron4 = classes
+        neuron4 = n_classes
         levels = config[0]
         neuron2, neuron3 = config[1]
         opt = config[2]
@@ -131,47 +128,55 @@ if KFold == True:
         wo[0] = config[6]
         wo[1] = config[7]
         width = config[8]
+        dropout_0 = config[9]
+        dropout_1 = config[10]
+        freq_mean = config[11]
+        freq_std = config[12]
         #End important
+        
         mean_accs = []
-        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"grid_search_{len(subjects)}_{f}_top10_{classes}_kfold12")
-        Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
-        
-        
         accuracies = [] # test accuracies
-        
+        times = []
         for subject in subjects:
-
-            filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"mnist_{len(subjects)}_{f}_{n_classes}_kfold_1")
+            Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
+            filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
             save_file_name = os.path.join(path_to_file,filename)
             if os.path.exists(save_file_name):
                 print(f"{filename} already exists!")
                 continue
 
-
             print('subject:', subject)
             print('function:', f)
             print('learning_rate:', lrs)
             
-
             accuracies_per_trial = []
-            for trial in train_val_trials:
-                train_trials = sel_trials(train_val_trials, trial)
+            times_per_trial = []
+            for trial in range(10):
                 print('val_trial:', trial)
-                EPOCHS = 500
-                BATCH_SIZE = 10
                 key = jax.random.PRNGKey(device)
                 key, init_key = jax.random.split(key)
-
-                x_train, x_val, x_test, y_train, y_val, y_test = get_data(
-                    datapath, sel_electrodes, stimulif, subject, validation_set=True,
-                    n_levels = levels, band_width=width, transform = f, sec_off = off, 
-                    split_test=test_trial, split_val=[trial], split_train=train_trials, 
-                    window=wo[0], overlap=wo[1], n_classes=classes)
+                
+                x_train, x_val, x_test, y_train, y_val, y_test = get_data(datapath,
+                                                                          classes=classes,
+                                                                          electrodes=c,
+                                                                          sampling_frequency=200,
+                                                                          n_levels=levels, 
+                                                                          band_width=width,
+                                                                          transform=f, 
+                                                                          window=wo[0], 
+                                                                          overlap=wo[1],
+                                                                          validation_set=True,
+                                                                          n_trials=10,
+                                                                          val_trial=trial)
 
                 class FreqLayer(nn.Module):
                     features: int
                     # kernel_init: Callable = nn.initializers.normal()
-                    kernel_init: Callable = my_init
+                    freq_mean: Callable = freq_mean
+                    freq_std: Callable = freq_std
+                    my_init2 = partial(my_init, mean=freq_mean, std=freq_std)
+                    kernel_init: Callable = my_init2
 
                     @nn.compact
                     def __call__(self, x):
@@ -185,24 +190,21 @@ if KFold == True:
                         # y = y + bias
                         return y
 
-
                 # Define the neural network model using FLAX
                 class SimpleClassifier(nn.Module):
                     """SimpleClassifier
                     Define the neural network model using FLAX
 
                     """
-
-                    # num_hidden: int
-                    # num_outputs: int
-                    # mean_value: float
-                    # features: int
                     kernel_init: Callable = nn.initializers.glorot_normal()
                     bias_init: Callable = my_bias_init
                     neuron1: Callable = neuron1
                     neuron2: Callable = neuron2
                     neuron3: Callable = neuron3
                     neuron4: Callable = neuron4
+                    dropout_0: Callable = dropout_0
+                    dropout_1: Callable = dropout_1
+
 
                     def setup(self):
                         # Create the modules we need to build the network
@@ -223,21 +225,20 @@ if KFold == True:
                         self.linear4 = nn.Dense(features=self.neuron4, name="dense4")
 
                         # create the dropout modules
-                        self.droput1 = nn.Dropout(0.30, deterministic=True)
-                        self.droput2 = nn.Dropout(0.15, deterministic=True)
+                        self.dropout1 = nn.Dropout(dropout_0, deterministic=True)
+                        self.dropout2 = nn.Dropout(dropout_1, deterministic=True)
 
                     # @nn.compact  # Tells Flax to look for defined submodules
                     def __call__(self, x):
                         x = self.linear1(x)
                         x = self.linear2(x)
                         x = nn.leaky_relu(x)
-                        x = self.droput1(x)
+                        x = self.dropout1(x)
                         x = self.linear3(x)
                         x = nn.leaky_relu(x)
-                        x = self.droput2(x)
+                        x = self.dropout2(x)
                         x = self.linear4(x)
                         return x
-
 
                 # B. Loss function we want to use for the optimization
                 @jax.jit
@@ -256,7 +257,6 @@ if KFold == True:
                     loss = jnp.mean(optax.softmax_cross_entropy(logits=logits, labels=labels))
                     return loss, logits
 
-
                 # C. Evaluation metric
                 @jax.jit
                 def calculate_accuracy(logits, labels):
@@ -269,7 +269,6 @@ if KFold == True:
                         Mean accuracy for the current batch
                     """
                     return jnp.mean(jnp.argmax(logits, -1) == jnp.argmax(labels, -1))
-
 
                 # D. Train step. We will `jit` transform it to compile it. We will get a
                 # good speedup on the subseuqent runs
@@ -447,8 +446,9 @@ if KFold == True:
                             f"loss: {epoch_train_loss:.3f}   acc: {epoch_train_acc:.3f}  valid_loss: {epoch_valid_loss:.3f}  valid_acc: {epoch_valid_acc:.3f}"
                         )
                 end = time.time()
-
-                print("--- %.2f seconds ---" % (end - start))
+                training_time = end-start
+                print("--- %.2f seconds ---" % (training_time))
+                times_per_trial.append(round(training_time,2))
 
 
                 # Let's plot the training and validataion losses as well as
@@ -486,23 +486,32 @@ if KFold == True:
                 #test_accuracie = evaluation(x_test, y_test) # not running yet
                 accuracies_per_trial.append(validation_accuracy[-1])
             print("Val accuracies per trial:", jnp.asarray(accuracies_per_trial))
+            mean_times = jnp.mean(jnp.array(times_per_trial))
             mean_trials = jnp.mean(jnp.asarray(accuracies_per_trial))
+            times.append(mean_times) # per subject (change if you want to run for multiple subjects)
             accuracies.append(mean_trials)
         val_mean = jnp.mean(jnp.asarray(accuracies))
+        times_mean = jnp.mean(jnp.asarray(times))
         mean_accs.append(val_mean)
         print(f"Overall mean test accuracy is {val_mean*100:.2f} %")
 
         
         data = {
             'Function': f,
+            'Epochs': str(EPOCHS),
+            'Batch_Size': str(BATCH_SIZE),
+            'Dropout': str((dropout_0,dropout_1)),
+            'FreqMean': str(freq_mean),
+            'FreqStd': str(freq_std),
             'Time_Off': str(off),
             'Window': str(wo[0]),
             'Overlap': str(wo[1]),
             'Levels': str(levels),
             'Band_Width': str(width),
-            'Neuron_Configuration': str(neuron_list),
+            'Neuron_Configuration': str((neuron1,neuron2,neuron3,neuron4)),
             'Optimizer': opt,
             'Learning_Rate': str(lrs),
+            'Training_Time': str(times_mean),
             'Mean_Accuracy': str(val_mean)
         }
         
@@ -514,13 +523,13 @@ else:
     print("Final MNIST training")    
     # Configuration based on the top 1 accuracy - running for 35 subjects (final_35_DHT_top10_4)
     #stimulif = [8, 10, 12, 15] 
-    classes = [0,1,2,3,4,5,6,7,8,9]
+    classes = [0,1]
     n_classes = len(classes)
     subjects = [1] 
-    learning_rates = [0.001, 0.0040, 0.01] # DHT=[0.01]
-    opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"]
-    neurons = [[4, 4]] #[2, 4],
-    levels_list = [1, 2] 
+    learning_rates = [0.001, 0.0040, 0.01, 0.0001] # DHT=[0.01]
+    opts = ["opt1", "opt2", "opt3", "opt4", "opt5", "opt7", "opt8"]
+    neurons = [[4, 4], [4, 8], [8, 8], [8, 16], [16,16], [16,32], [32,32]] #[2, 4],
+    levels_list = [1, 2, 3] 
     band_widths = [1, 2, 3] 
     functions = ['DHT'] #[DHT]
     seconds_off = [0.0] #[0, 0.5
@@ -573,7 +582,7 @@ else:
         width = config[8]
         #End important
         mean_accs = []
-        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"mnist_{len(subjects)}_{f}_top1_{n_classes}")
+        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"binarymnist_{len(subjects)}_{f}_{n_classes}_c") #take off the _b to continue the a experiment a
         Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
         
         
@@ -594,7 +603,7 @@ else:
             key = jax.random.PRNGKey(device)
             key, init_key = jax.random.split(key)
 
-            eegdatatrain, eegdatatest, y_train, y_test = mnist_dataloader(datapath, electrodes=a, classes=classes)
+            eegdatatrain, eegdatatest, y_train, y_test = mnist_dataloader(datapath, electrodes=c, classes=classes)
             x_train =  mnist_preprocessing(data=eegdatatrain, sampling_frequency=200, n_levels=levels, band_width=width,
                                            transform=f, window=wo[0], overlap=wo[1])
             x_test = mnist_preprocessing(data=eegdatatest, sampling_frequency=200, n_levels=levels, band_width=width,
@@ -891,6 +900,7 @@ else:
                 return acc_test
             
             test_accuracy = evaluation(x_test, y_test) # accuracy for one subject
+            times_mean = jnp.mean(jnp.asarray(times))
             accuracies.append(test_accuracy) # save accuracies from all subjects
             print("Test accuracy per subject:", test_accuracy)
 

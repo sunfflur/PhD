@@ -13,7 +13,7 @@ from main_functions.DHT import dataDHT
 
 
 
-def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=True):
+def hartley_fourier(signal, stimulus_frequency, sampling_frequency, height, width, scale, freq_format=True):
   input_signal=signal
   #input_signal = signal
   N = input_signal.shape[0]
@@ -38,26 +38,26 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
 
   if freq_format == True:
     # Create subplots
-    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=(f"Input signal - {stimulus_frequency} Hz", "Fourier Transform", "Hartley Transform"), )
+    fig = sp.make_subplots(rows=1, cols=3, subplot_titles=(f"Input signal - {stimulus_frequency} Hz", "The Fourier Transform", "The Hartley Transform"), )
 
     color0 = dict(color='rgb(130, 130, 130)')
     color1 = dict(color='rgb(70, 130, 180)') #rgb(0, 158, 128)
     color2 = dict(color='rgb(0, 0, 139)')
 
     # Add the time-domain plot to the first subplot
-    fig.add_trace(go.Scatter(x=t, y=input_signal, mode='lines', name='Input Signal', line=color0), row=1, col=1)
+    fig.add_trace(go.Scatter(x=t, y=input_signal, mode='lines', line=color0), row=1, col=1) #name='Input Signal'
     fig.update_xaxes(title_text="Time [s]", row=1, col=1)
     fig.update_yaxes(title_text="Amplitude", row=1, col=1)
 
     # Add the frequency-domain plot to the second subplot
     #sampling_freq = N  # Assume a sampling frequency equal to the number of points
     #frequencies = jnp.fft.fftfreq(N) * sampling_freq
-    fig.add_trace(go.Scatter(x=frequencies, y=magnitude_spectrum0[:N//2]/N, mode='lines', name='Fourier Transform', line=color1), row=1, col=2) #[:N//2]
+    fig.add_trace(go.Scatter(x=frequencies, y=magnitude_spectrum0[:N//2]/N, mode='lines', line=color1), row=1, col=2) #[:N//2] name='Fourier Transform'
     fig.update_xaxes(title_text="Frequency [Hz]", row=1, col=2)
     fig.update_yaxes(title_text="Magnitude", row=1, col=2)
 
     # Add the Hartley transform plot to the third subplot
-    fig.add_trace(go.Scatter(x=frequencies, y=hartley_transform0[:N//2]/N, mode='lines', name='Hartley Transform', line=color2), row=1, col=3) #[:N//2]
+    fig.add_trace(go.Scatter(x=frequencies, y=hartley_transform0[:N//2]/N, mode='lines', line=color2), row=1, col=3) #[:N//2] name='Hartley Transform',
     fig.update_xaxes(title_text="Frequency [Hz]", row=1, col=3)
     fig.update_yaxes(title_text="Magnitude", row=1, col=3)
 
@@ -90,8 +90,18 @@ def hartley_fourier(signal, stimulus_frequency, sampling_frequency, freq_format=
     fig.add_shape(vertical_line, row=1, col=3)
 
     # Update the layout and display the figure
-    fig.update_layout(title='', template='plotly_white')
-    fig.show()
+    fig.update_layout(title='', template='plotly_white', showlegend=False)
+    config = {
+    'toImageButtonOptions': {
+        'format': 'png', # one of png, svg, jpeg, webp
+        'filename': 'custom_image',
+        'height': height,
+        'width': width,
+        'scale': scale # Multiply title/legend/axis/canvas sizes by this factor
+    }
+    }
+    fig.show(config=config)
+    #fig.show()
     
 def plot_slices(data):        
     data = [data.reshape(1, data.shape[2], 1)]
@@ -125,16 +135,12 @@ def plot_slices(data):
     fig.update_layout(height=400*len(data), title='Slicing - 3 levels', template='plotly_white')
     fig.show()
     
-def plot_coefs(normdht, normdft):    
+def plot_coefs(normdht, normdft, height, width, scale, colors):    
     data = [normdht.reshape(1, normdht.shape[2], 1), normdft.reshape(1, normdft.shape[2], 1)]
-
-    # Define the colors for each level
-    colors = [['skyblue', 'steelblue', 'navy'], 
-            ['lightgreen', 'limegreen', 'darkgreen']]  # Add more colors if needed
 
     # Create a figure with subplots
     fig = sp.make_subplots(rows=len(data), cols=1, shared_xaxes=True, vertical_spacing=0.05,
-                        subplot_titles=("Fourier Transform", "Hartley Transform"))
+                        subplot_titles=("The Fourier Transform", "The Hartley Transform"))
 
     # Add traces for each dataset
     for i in range(len(data)):
@@ -152,14 +158,26 @@ def plot_coefs(normdht, normdft):
         fig.add_trace(trace1, row=i+1, col=1)
         fig.add_trace(trace2, row=i+1, col=1)
         fig.add_trace(trace3, row=i+1, col=1)
+        fig.update_xaxes(title_text="Width", row=2, col=1)
+        fig.update_yaxes(title_text="Magnitude", row=i+1, col=1)
 
     # Update layout
     #fig.update_layout( title_text="Data Comparison", showlegend=True)
 
     # Show the figure
     # Update the layout and display the figure
-    fig.update_layout(height=400*len(data), title='Coefficients for the nn', template='plotly_white')
-    fig.show()
+    fig.update_layout(height=height*len(data), title='Coefficients for the neural network', template='plotly_white')
+    config = {
+    'toImageButtonOptions': {
+        'format': 'png', # one of png, svg, jpeg, webp
+        'filename': 'custom_image',
+        'height': height*len(data),
+        'width': width,
+        'scale': scale # Multiply title/legend/axis/canvas sizes by this factor
+    }
+    }
+    fig.show(config=config)
+    #fig.show()
 
 
 def plot_mnist(data, label, dhtdata, sampling_frequency):

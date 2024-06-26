@@ -54,6 +54,7 @@ def get_data(datapath, subjects, validation_set=True, **kwargs):
         x_train, x_val, y_train, y_val = splitting_bcic2a(
             data=processed_train,
             labels=eeglabelstrain,
+            n_trials=kwargs.get("n_trials", 6),
             val_trial=kwargs.get("val_trial", 0)
         )
         return x_train, x_val, processed_test, y_train, y_val, eeglabelstest

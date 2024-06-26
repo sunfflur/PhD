@@ -46,10 +46,9 @@ def splitting_per_trial(data, labels, split_train, split_val, split_test, trial_
       return jnp.concatenate(x_train, axis=0), jnp.concatenate(x_val, axis=0), jnp.concatenate(x_test, axis=0), to_categorical(jnp.concatenate(y_train, axis=0), n_classes=n_classes), to_categorical(jnp.concatenate(y_val, axis=0),n_classes=n_classes), to_categorical(jnp.concatenate(y_test, axis=0), n_classes=n_classes)
     
     
-def splitting_bcic2a(data, labels, val_trial):
+def splitting_bcic2a(data, labels, n_trials, val_trial):
   #data has shape 288, 22*1250
   # 288/6 = 48
-  n_trials = 6
   trial_size = data.shape[0]//n_trials
   
   start_index = val_trial * trial_size

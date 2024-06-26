@@ -17,6 +17,7 @@ from main_functions.utils import *
 from main_functions.dataloader import BCIC_dataloader
 from main_functions.preprocessing import mnist_preprocessing
 from data_bcic2a import get_data
+from functools import partial
 import time
 
 np.random.seed(56)
@@ -37,8 +38,8 @@ get_gpu_memory_info()
 
 
 """   
-    Dataset from: http://bci.med.tsinghua.edu.cn/
-    Starting with subject 1: S1.mat
+    Dataset from: 
+    Starting with subject 1
 
 """
 datapath = ('/home/natalia/Git_Projects/PhD/data')
@@ -54,23 +55,25 @@ if KFold == True:
     classes = [0,1,2,3]
     n_classes = len(classes)
     subjects = [1] 
-    learning_rates = [0.001, 0.0040, 0.01, 0.0001] # DHT=[0.01]
+    learning_rates = [0.001, 0.0040, 0.01, 0.0001, 0.1] # DHT=[0.01]
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"]
     neurons = [[4, 4], [4, 8], [8, 16], [16, 16], [16, 32], [32,64]] #[2, 4],
     levels_list = [1, 2, 3] 
-    band_widths = [1, 2, 3] 
+    band_widths = [1, 2, 3, 4, 5] 
     functions = ['DHT', 'DFT'] #[DHT]
     seconds_off = [0.0] #[0, 0.5
-    #total_trials = jnp.arange(6) # total possible trials
-    #test_trial = [np.random.randint(6)] # choose one trial to test
-    #train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
     windows_overlaps = [[5, 0]] # windows and overlaps
-
+    dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
+    freq_means = [2.0, 1.0, 0.0]
+    freq_stds = [0.1, 0.01, 0.001]
 
     results = {
         'Function': [],
         'Epochs': [],
         'Batch_Size': [],
+        'Dropout': [],
+        'FreqMean': [],
+        'FreqStd': [],
         'Time_Off': [],
         'Window': [],
         'Overlap': [],
@@ -84,16 +87,18 @@ if KFold == True:
     }
 
     configs_list = []
-
-    for wo in windows_overlaps:
-        for off in seconds_off:
-            for f in functions:
-                for levels in levels_list:
-                    for width in band_widths:
-                        for neuron_list in neurons:
-                            for opt in opts:
-                                for lrs in learning_rates:
-                                    configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width))
+    for fstd in freq_stds:
+        for fmean in freq_means:
+            for dp in dropout_taxes:
+                for wo in windows_overlaps:
+                    for off in seconds_off:
+                        for f in functions:
+                            for levels in levels_list:
+                                for width in band_widths:
+                                    for neuron_list in neurons:
+                                        for opt in opts:
+                                            for lrs in learning_rates:
+                                                configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width, dp[0], dp[1], fmean, fstd))
 
     np.random.shuffle(configs_list)
     for config in configs_list:
@@ -109,14 +114,20 @@ if KFold == True:
         wo[0] = config[6]
         wo[1] = config[7]
         width = config[8]
+        dropout_0 = config[9]
+        dropout_1 = config[10]
+        freq_mean = config[11]
+        freq_std = config[12]
+        
+        
         #End important
         mean_accs = []      
         accuracies = [] # test accuracies
-        
+        times = []
         for subject in subjects:
-            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"bcic2a_grid_search_{len(subjects)}_{f}_{n_classes}_kfold")
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"bcic2a_{len(subjects)}_{f}_{n_classes}_kfold_1")
             Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
-            filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
+            filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
             save_file_name = os.path.join(path_to_file,filename)
             if os.path.exists(save_file_name):
                 print(f"{filename} already exists!")
@@ -131,9 +142,6 @@ if KFold == True:
             accuracies_per_trial = []
             times_per_trial = []
             for trial in range(6):
-                #print('val_trial:', trial)
-                EPOCHS = 500
-                BATCH_SIZE = 10
                 key = jax.random.PRNGKey(device)
                 key, init_key = jax.random.split(key)
                 
@@ -146,22 +154,26 @@ if KFold == True:
                                                                           transform=f, 
                                                                           window=wo[0], 
                                                                           overlap=wo[1],
-                                                                          validation_set=True, 
+                                                                          validation_set=True,
+                                                                          n_trials=6,
                                                                           val_trial=trial)
 
 
                 class FreqLayer(nn.Module):
                     features: int
                     # kernel_init: Callable = nn.initializers.normal()
-                    kernel_init: Callable = my_init
+                    freq_mean: Callable = freq_mean
+                    freq_std: Callable = freq_std
+                    my_init2 = partial(my_init, mean=freq_mean, std=freq_std)
+                    kernel_init: Callable = my_init2
 
                     @nn.compact
                     def __call__(self, x):
                         kernel = self.param(
                             "kernel",
                             self.kernel_init,  # Initialization function
-                            (x.shape[-1], 1),
-                        )  # shape info.
+                            (x.shape[-1], 1))  # shape info.
+                    
                         y = x * jnp.ravel(kernel)  # (10,1000)
                         # bias = self.param('bias', self.bias_init, (self.features,))
                         # y = y + bias
@@ -184,6 +196,8 @@ if KFold == True:
                     neuron2: Callable = neuron2
                     neuron3: Callable = neuron3
                     neuron4: Callable = neuron4
+                    dropout_0: Callable = dropout_0
+                    dropout_1: Callable = dropout_1
 
                     def setup(self):
                         # Create the modules we need to build the network
@@ -204,18 +218,18 @@ if KFold == True:
                         self.linear4 = nn.Dense(features=self.neuron4, name="dense4")
 
                         # create the dropout modules
-                        self.droput1 = nn.Dropout(0.30, deterministic=True)
-                        self.droput2 = nn.Dropout(0.15, deterministic=True)
+                        self.dropout1 = nn.Dropout(self.dropout_0, deterministic=True) #0.30
+                        self.dropout2 = nn.Dropout(self.dropout_1, deterministic=True) #0.15
 
                     # @nn.compact  # Tells Flax to look for defined submodules
                     def __call__(self, x):
                         x = self.linear1(x)
                         x = self.linear2(x)
                         x = nn.leaky_relu(x)
-                        x = self.droput1(x)
+                        x = self.dropout1(x)
                         x = self.linear3(x)
                         x = nn.leaky_relu(x)
-                        x = self.droput2(x)
+                        x = self.dropout2(x)
                         x = self.linear4(x)
                         return x
 
@@ -449,8 +463,10 @@ if KFold == True:
             print("Val accuracies per trial:", jnp.asarray(accuracies_per_trial))
             mean_times = jnp.mean(jnp.array(times_per_trial))
             mean_trials = jnp.mean(jnp.asarray(accuracies_per_trial))
+            times.append(mean_times)
             accuracies.append(mean_trials)
         val_mean = jnp.mean(jnp.asarray(accuracies))
+        times_mean = jnp.mean(jnp.asarray(times))
         mean_accs.append(val_mean)
         #print(f"Overall mean test accuracy is {val_mean*100:.2f} %")
 
@@ -459,15 +475,18 @@ if KFold == True:
             'Function': f,
             'Epochs': str(EPOCHS),
             'Batch_Size': str(BATCH_SIZE),
+            'Dropout': str((dropout_0,dropout_1)),
+            'FreqMean': str(freq_mean),
+            'FreqStd': str(freq_std),
             'Time_Off': str(off),
             'Window': str(wo[0]),
             'Overlap': str(wo[1]),
             'Levels': str(levels),
             'Band_Width': str(width),
-            'Neuron_Configuration': str(neuron_list),
+            'Neuron_Configuration': str((neuron1,neuron2,neuron3,neuron4)),
             'Optimizer': opt,
             'Learning_Rate': str(lrs),
-            'Training_Time': str(mean_times),
+            'Training_Time': str(times_mean),
             'Mean_Accuracy': str(val_mean)
         }
         
@@ -476,18 +495,16 @@ if KFold == True:
 
 
 else:        
-    print("BCI Competition Dataset IV 2a training")    
-    # Configuration based on the top 1 accuracy - running for 35 subjects (final_35_DHT_top10_4)
-    #stimulif = [8, 10, 12, 15] 
+    print("Final BCI Competition Dataset IV 2a training")    
     classes = [0,1,2,3]
     n_classes = len(classes)
-    subjects = [1] 
-    learning_rates = [0.001, 0.0040, 0.01] # DHT=[0.01]
-    opts = ["opt1","opt2", "opt3", "opt4", "opt5", "opt6", "opt7", "opt8"]
-    neurons = [[4, 4], [4, 8], [8, 16], [16, 16], [16, 32]] #[2, 4],
-    levels_list = [1, 2, 3] 
-    band_widths = [1, 2, 3] 
-    functions = ['DHT', 'DFT'] #[DHT]
+    subjects = [1, 2, 3, 4, 5, 6, 7, 8, 9] 
+    learning_rates = [0.001] 
+    opts = ["opt3"] #"opt3
+    neurons = [[64, 64]] 
+    levels_list = [3] #3
+    band_widths = [5] 
+    functions = ['DHT'] #[DHT]
     seconds_off = [0.0] #[0, 0.5
     #total_trials = jnp.arange(6) # total possible trials
     #test_trial = [np.random.randint(6)] # choose one trial to test
@@ -538,14 +555,14 @@ else:
         width = config[8]
         #End important
         mean_accs = []
-        path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"bcic2a_{len(subjects)}_{f}_top10_{n_classes}")
-        Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
         
         
         accuracies = [] # test accuracies
         for subject in subjects:
             
             #Important
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"final_bcic2a_{len(subjects)}_{f}_top10_{n_classes}")
+            Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
             filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{neuron3}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
             save_file_name = os.path.join(path_to_file,filename)
             if os.path.exists(save_file_name):
