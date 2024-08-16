@@ -82,7 +82,7 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject (grid_search_1_DXT_top10_4)
     stimulif = [8, 10, 12, 15]  
     n_classes = len(stimulif)
-    subjects = [1]#[12] 
+    subjects = [2]#[1] 
     learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01] 
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"] #"opt1",
     neurons = [[8, 8], [4, 8], [16, 16], [8, 16]] # , #list(product([16, 32],repeat=2)) 
@@ -157,7 +157,7 @@ if KFold == True:
         accuracies = [] # test accuracies
         
         for subject in subjects:
-            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"tsinghua_{len(subjects)}_{f}_{n_classes}_kfold_1")
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"tsinghua_{subject}_{f}_{n_classes}_kfold_1")
             Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
 
             filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
