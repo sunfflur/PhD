@@ -1,2 +1,0 @@
-,Function,Levels,Neuron_Configuration,Optimizer,Learning_Rate,Mean Accuracy
-0,DHT,2,"(16, 16)",opt4,0.0095,0.8288177

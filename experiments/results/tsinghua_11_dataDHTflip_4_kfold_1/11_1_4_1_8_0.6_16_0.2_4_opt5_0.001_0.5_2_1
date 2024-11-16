@@ -1,0 +1,2 @@
+,Function,Epochs,Batch_Size,Dropout,FreqMean,FreqStd,Time_Off,Window,Overlap,Levels,Band_Width,Neuron_Configuration,Optimizer,Learning_Rate,Mean_Accuracy
+0,dataDHTflip,500,10,"(0.6, 0.2)",0.0,0.1,0.5,2,1,1,4,"(1, 8, 16, 4)",opt5,0.001,0.2

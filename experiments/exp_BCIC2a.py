@@ -54,13 +54,13 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject
     classes = [0,1,2,3]
     n_classes = len(classes)
-    subjects = [1] 
+    subjects = [4] #1
     learning_rates = [0.001, 0.0040, 0.01, 0.0001, 0.1] # DHT=[0.01]
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"]
     neurons = [[4, 4], [4, 8], [8, 16], [16, 16], [16, 32], [32,64]] #[2, 4],
     levels_list = [1, 2, 3] 
-    band_widths = [1, 2, 3, 4, 5] 
-    functions = ['DHT', 'DFT'] #[DHT]
+    band_widths = [1, 2, 3, 4, 5]
+    functions = ['DHT', 'DFT'] # ['halfDHT', 'halfDFT']
     seconds_off = [0.0] #[0, 0.5
     windows_overlaps = [[5, 0]] # windows and overlaps
     dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
@@ -125,7 +125,7 @@ if KFold == True:
         accuracies = [] # test accuracies
         times = []
         for subject in subjects:
-            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"bcic2a_{len(subjects)}_{f}_{n_classes}_kfold_1")
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"bcic2a_{subject}_{f}_{n_classes}_kfold_1")
             Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
             filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
             save_file_name = os.path.join(path_to_file,filename)

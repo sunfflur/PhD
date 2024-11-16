@@ -1,8 +1,8 @@
 import jax.numpy as jnp
 from main_functions.slicing import dataslicing
 from main_functions.pooling import datapooling
-from main_functions.DHT import dataDHT
-from main_functions.DFT import dataDFT
+from main_functions.DHT import dataDHT, dataDHTflip, dataDHT_half, dataDHT_halfsym, dataDHT_halfsym_1
+from main_functions.DFT import dataDFT, dataDFT_half
 from main_functions.utils import NormalizeData_, NormalizeData
 from main_functions.windowing import windowing
 from sklearn.preprocessing import LabelEncoder
@@ -35,7 +35,17 @@ def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int
             functiondata = dataDHT(eegdata_sliced[block])
         elif transform == 'DFT':
             functiondata = dataDFT(eegdata_sliced[block])
-        datapool = datapooling(functiondata, axis=2, width=band_width)
+        elif transform == 'dataDHTflip':
+            functiondata = dataDHTflip(eegdata_sliced[block])
+        elif transform == 'halfDHT':
+            functiondata = dataDHT_half(eegdata_sliced[block])
+        elif transform == 'halfDFT':
+            functiondata = dataDFT_half(eegdata_sliced[block])
+        elif transform == 'symDHT':
+            functiondata = dataDHT_halfsym(eegdata_sliced[block])
+        elif transform == 'symDHTabs':
+            functiondata = dataDHT_halfsym_1(eegdata_sliced[block])
+        datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type='sum')
         #print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)
@@ -57,7 +67,17 @@ def mnist_preprocessing(data, sampling_frequency: int, n_levels: int, band_width
             functiondata = dataDHT(eegdata_sliced[block])
         elif transform == 'DFT':
             functiondata = dataDFT(eegdata_sliced[block])
-        datapool = datapooling(functiondata, axis=2, width=band_width)
+        elif transform == 'dataDHTflip':
+            functiondata = dataDHTflip(eegdata_sliced[block])
+        elif transform == 'halfDHT':
+            functiondata = dataDHT_half(eegdata_sliced[block])
+        elif transform == 'halfDFT':
+            functiondata = dataDFT_half(eegdata_sliced[block])
+        elif transform == 'symDHT':
+            functiondata = dataDHT_halfsym(eegdata_sliced[block])
+        elif transform == 'symDHTabs':
+            functiondata = dataDHT_halfsym_1(eegdata_sliced[block])
+        datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type='sum')
         #print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)
