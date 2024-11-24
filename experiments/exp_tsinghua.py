@@ -82,27 +82,29 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject (grid_search_1_DXT_top10_4)
     stimulif = [8, 10, 12, 15]  
     n_classes = len(stimulif)
-    subjects = [1]
+    subjects = [1, 4]
     learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01]
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"] #"opt1",
     neurons = [[8, 8], [4, 8], [16, 16], [8, 16]] # , #list(product([16, 32],repeat=2)) 
-    levels_list = [1, 2, 3] 
-    band_widths = [1, 2, 3, 4, 5] 
-    functions = ['halfDHT', 'symDHTabs'] #['DHT', 'DFT', 'halfDFT', 'symDHT', 'halfDHT', 'symDHTabs', 'dataDHTflip']
+    levels_list = [1, 2, 3] # levels
+    band_widths = [1, 2, 3, 4, 5] # raio
+    functions = ['DFT', 'DHT'] #['DHT', 'DFT', 'halfDFT', 'symDHT', 'halfDHT', 'symDHTabs', 'dataDHTflip']
     seconds_off = [0.5] 
     total_trials = jnp.arange(6) # total possible trials
     test_trial = [np.random.randint(6)] # choose one trial to test
     train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
-    windows_overlaps = [[3, 1], [3, 2], [2, 1]] # windows and overlaps
+    windows_overlaps = [[3, 1], [3, 2], [2, 1]] # windows and overlaps: [3, 1], [3, 2], [2, 1]
     dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
     freq_means = [2.0, 1.0, 0.0]
     freq_stds = [0.1, 0.01, 0.001]
+    pooling = ['Sum']
 
 
     results = {
         'Function': [],
         'Epochs': [],
         'Batch_Size': [],
+        'Pooling': [],
         'Dropout': [],
         'FreqMean': [],
         'FreqStd': [],
@@ -114,26 +116,27 @@ if KFold == True:
         'Neuron_Configuration': [],
         'Optimizer': [],
         'Learning_Rate': [],
-        'Mean_Accuracy': []
+        'Mean_Accuracy': [],
+        'Mean_Time': [],
+        'Params': [],
     }
 
     configs_list = []
-
-    for fstd in freq_stds:
-        for fmean in freq_means:
-            for dp in dropout_taxes:
-                for wo in windows_overlaps:
-                    for off in seconds_off:
-                        for f in functions:
-                            for levels in levels_list:
-                                for width in band_widths:
-                                    for neuron_list in neurons:
-                                        for opt in opts:
-                                            for lrs in learning_rates:
-                                                configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width, dp[0], dp[1], fmean, fstd))
+    for pool in pooling:
+        for fstd in freq_stds:
+            for fmean in freq_means:
+                for dp in dropout_taxes:
+                    for wo in windows_overlaps:
+                        for off in seconds_off:
+                            for f in functions:
+                                for levels in levels_list:
+                                    for width in band_widths:
+                                        for neuron_list in neurons:
+                                            for opt in opts:
+                                                for lrs in learning_rates:
+                                                    configs_list.append((levels, neuron_list, opt, lrs, f, off, wo[0], wo[1], width, dp[0], dp[1], fmean, fstd, pool))
 
     #results_list = []
-    #main_df = pd.DataFrame()
     np.random.shuffle(configs_list)
     for config in configs_list:
         #Important
@@ -152,12 +155,13 @@ if KFold == True:
         dropout_1 = config[10]
         freq_mean = config[11]
         freq_std = config[12]
+        pool = config[13]
         #End important
         mean_accs = []
         accuracies = [] # test accuracies
         
         for subject in subjects:
-            path_to_file = os.path.join(os.getcwd(), "experiments", "results", f"tsinghua_{subject}_{f}_{n_classes}_kfold_1")
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results_v2", f"tsinghua_{subject}_{f}_{n_classes}_{pool}_kfold_1") #_v2
             Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
 
             filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
@@ -166,18 +170,14 @@ if KFold == True:
                 print(f"{filename} already exists!")
                 continue
 
-
             print('subject:', subject)
-            print('function:', f)
-            print('learning_rate:', lrs)
-            
+            print("width:", width)
 
             accuracies_per_trial = []
+            times_per_trial = []
             for trial in train_val_trials:
                 train_trials = sel_trials(train_val_trials, trial)
-                print('val_trial:', trial)
-                #EPOCHS = 500
-                #BATCH_SIZE = 10
+                #print('val_trial:', trial)
                 key = jax.random.PRNGKey(device)
                 key, init_key = jax.random.split(key)
 
@@ -186,6 +186,12 @@ if KFold == True:
                     n_levels = levels, band_width=width, transform = f, sec_off = off, 
                     split_test=test_trial, split_val=[trial], split_train=train_trials, 
                     window=wo[0], overlap=wo[1], n_classes=n_classes)
+                
+                print("data_shape:", x_train.shape)
+                print("width:", width)
+                print("n_levels:", levels)
+                print("sec_off:", off)
+                print("window and overlap:", wo[0], wo[1])
 
                 class FreqLayer(nn.Module):
                     features: int
@@ -368,11 +374,8 @@ if KFold == True:
 
                     # 2. Initialize the parameters of the model
                     params = model.init(key, jnp.ones([1, x_train.shape[1]]))["params"]
-                    # print(jax.tree_map(lambda x: x.shape, params))
-
+                    n_params = params
                     # 3. Define the optimizer with the desired learning rate
-
-                    # 0.01, 0.09, x_train.shape[0]/BATCH_SIZE
                     lrd = optimizers.inverse_time_decay(
                         step_size=lr,
                         decay_steps=x_train.shape[0] / BATCH_SIZE,
@@ -401,10 +404,10 @@ if KFold == True:
                     # module method to variables and returns output and modified variables.
                     #opt3 best option lr=0.001
                     return train_state.TrainState.create(
-                        apply_fn=model.apply, params=params, tx=optim_dict[opt]
-                    )
-
+                        apply_fn=model.apply, params=params, tx=optim_dict[opt])
                 state = create_train_state(init_key)
+                params_dict = jax.tree_util.tree_map(lambda x: x.shape, state.params)
+                total_params = count_params(params_dict)
 
                 # Lists to record loss and accuracy for each epoch
                 training_loss = []
@@ -473,8 +476,7 @@ if KFold == True:
                 end = time.time()
 
                 print("--- %.2f seconds ---" % (end - start))
-
-
+                training_time_trial = end - start
                 # Let's plot the training and validataion losses as well as
                 # accuracies for both the dataset.
                 """
@@ -509,7 +511,9 @@ if KFold == True:
 
                 #test_accuracie = evaluation(x_test, y_test) # not running yet
                 accuracies_per_trial.append(validation_accuracy[-1])
+                times_per_trial.append(training_time_trial)
             print("Val accuracies per trial:", jnp.asarray(accuracies_per_trial))
+            total_time = jnp.sum(jnp.asarray(times_per_trial))
             mean_trials = jnp.mean(jnp.asarray(accuracies_per_trial))
             accuracies.append(mean_trials)
 
@@ -518,6 +522,7 @@ if KFold == True:
                 'Function': f,
                 'Epochs': str(EPOCHS),
                 'Batch_Size': str(BATCH_SIZE),
+                'Pooling': pool,
                 'Dropout': str((dropout_0,dropout_1)),
                 'FreqMean': str(freq_mean),
                 'FreqStd': str(freq_std),
@@ -529,7 +534,9 @@ if KFold == True:
                 'Neuron_Configuration': str((neuron1,neuron2,neuron3,neuron4)),
                 'Optimizer': opt,
                 'Learning_Rate': str(lrs),
-                'Mean_Accuracy': str(mean_trials)
+                'Mean_Accuracy': str(mean_trials),
+                'Time': str(f"{total_time:.2f}"),
+                'Params': str(total_params)
             }
             
             df_cfg = pd.DataFrame.from_dict(data, orient="index").transpose()

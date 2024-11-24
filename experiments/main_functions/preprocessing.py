@@ -49,6 +49,7 @@ def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int
         #print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)
+    print("grouped_data:", groupeddata.shape)
     norm_groupeddata = NormalizeData(groupeddata)  # groupeddata (16, 4, 1498, 12)
     
     # mapping labels 

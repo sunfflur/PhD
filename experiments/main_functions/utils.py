@@ -103,3 +103,14 @@ def read_grid_search(path_to_results):
 def sel_trials(trials, val_trial: int):
     train_trials = jnp.delete(trials, jnp.where(trials == val_trial)[0][0])
     return train_trials
+
+def count_params(dct):
+    soma = 0
+    for k,v in dct.items():
+        if isinstance(v, dict):
+            soma+=count_params(v)
+        if isinstance(v, tuple):
+            soma+=np.prod(v)
+        if isinstance(v, int):
+            soma+=v
+    return soma
