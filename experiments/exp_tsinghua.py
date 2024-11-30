@@ -117,7 +117,7 @@ if KFold == True:
         'Optimizer': [],
         'Learning_Rate': [],
         'Mean_Accuracy': [],
-        'Mean_Time': [],
+        'Time': [],
         'Params': [],
     }
 
@@ -161,7 +161,7 @@ if KFold == True:
         accuracies = [] # test accuracies
         
         for subject in subjects:
-            path_to_file = os.path.join(os.getcwd(), "experiments", "results_v2", f"tsinghua_{subject}_{f}_{n_classes}_{pool}_kfold_1") #_v2
+            path_to_file = os.path.join(os.getcwd(), "experiments", "results_v3", f"tsinghua_{subject}_{f}_{n_classes}_{pool}_kfold_1") #_v2
             Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
 
             filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
@@ -171,7 +171,6 @@ if KFold == True:
                 continue
 
             print('subject:', subject)
-            print("width:", width)
 
             accuracies_per_trial = []
             times_per_trial = []
@@ -374,7 +373,6 @@ if KFold == True:
 
                     # 2. Initialize the parameters of the model
                     params = model.init(key, jnp.ones([1, x_train.shape[1]]))["params"]
-                    n_params = params
                     # 3. Define the optimizer with the desired learning rate
                     lrd = optimizers.inverse_time_decay(
                         step_size=lr,

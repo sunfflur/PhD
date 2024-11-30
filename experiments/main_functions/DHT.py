@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from jax.numpy.fft import fft
+from jax.numpy.fft import fft, fftshift
 
 @jax.jit
 def dataDHT(data):
@@ -11,7 +11,7 @@ def dataDHT(data):
         
     """    
     # data now has shape (16, 4, 1000, 6)    
-    fourier_data = fft(data, axis=2)
+    fourier_data = fftshift(fft(data, axis=2), axes=2)
     hartley_data = jnp.real(fourier_data) - jnp.imag(fourier_data)
 
     # implement normalization if needed
