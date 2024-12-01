@@ -54,14 +54,14 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject
     classes = [0,1,2,3]
     n_classes = len(classes)
-    subjects = [4] #1
-    learning_rates = [0.001, 0.0040, 0.01, 0.0001, 0.1] # DHT=[0.01]
+    subjects = [1,4] #1
+    learning_rates = [0.001, 0.004, 0.01, 0.0001] # DHT=[0.01]
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"]
-    neurons = [[4, 4], [4, 8], [8, 16], [16, 16], [16, 32], [32,64]] #[2, 4],
+    neurons = [[4, 4], [4, 8], [8, 16], [16, 16], [16, 32]] #[2, 4],
     levels_list = [1, 2, 3] 
     band_widths = [1, 2, 3, 4, 5]
     functions = ['DHT', 'DFT'] # ['halfDHT', 'halfDFT']
-    seconds_off = [0.0] #[0, 0.5
+    seconds_off = [0.0, 0.5] #[0, 0.5
     windows_overlaps = [[5, 0]] # windows and overlaps
     dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
     freq_means = [2.0, 1.0, 0.0]
@@ -441,7 +441,7 @@ if KFold == True:
                         )
                 end = time.time()
                 
-                training_time_trial = end - start = end-start
+                training_time_trial = end - start 
                 #print("--- %.2f seconds ---" % (training_time))
                 
                 def evaluation(x_val, y_val):
@@ -473,6 +473,7 @@ if KFold == True:
                 'Function': f,
                 'Epochs': str(EPOCHS),
                 'Batch_Size': str(BATCH_SIZE),
+                'Pooling': pool,
                 'Dropout': str((dropout_0,dropout_1)),
                 'FreqMean': str(freq_mean),
                 'FreqStd': str(freq_std),
