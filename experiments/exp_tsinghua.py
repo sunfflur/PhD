@@ -82,7 +82,7 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject (grid_search_1_DXT_top10_4)
     stimulif = [8, 10, 12, 15]  
     n_classes = len(stimulif)
-    subjects = [1, 4]
+    subjects = [1, 4, 13, 27]
     learning_rates = [0.0001, 0.0002, 0.001, 0.004, 0.01]
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"] #"opt1",
     neurons = [[8, 8], [4, 8], [16, 16], [8, 16]] # , #list(product([16, 32],repeat=2)) 
@@ -91,7 +91,7 @@ if KFold == True:
     functions = ['DFT', 'DHT'] #['DHT', 'DFT', 'halfDFT', 'symDHT', 'halfDHT', 'symDHTabs', 'dataDHTflip']
     seconds_off = [0.5] 
     total_trials = jnp.arange(6) # total possible trials
-    test_trial = [np.random.randint(6)] # choose one trial to test
+    test_trial = [np.random.randint(6)] # choose one trial to test - always getting trial 5 
     train_val_trials = sel_trials(total_trials, test_trial[0]) # return the train and val possible trials
     windows_overlaps = [[3, 1], [3, 2], [2, 1]] # windows and overlaps: [3, 1], [3, 2], [2, 1]
     dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
@@ -171,6 +171,7 @@ if KFold == True:
                 continue
 
             print('subject:', subject)
+            print('ttrial:', test_trial)
 
             accuracies_per_trial = []
             times_per_trial = []

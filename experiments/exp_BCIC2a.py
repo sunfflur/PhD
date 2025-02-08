@@ -54,7 +54,7 @@ if KFold == True:
     # Grid-search K-fold - running for 1 subject
     classes = [0,1,2,3]
     n_classes = len(classes)
-    subjects = [1,4] #1
+    subjects = [1,2,3,4,5,6] #1
     learning_rates = [0.001, 0.004, 0.01, 0.0001] # DHT=[0.01]
     opts = ["opt1","opt3", "opt4", "opt5", "opt7", "opt8"]
     neurons = [[4, 4], [4, 8], [8, 16], [16, 16], [16, 32]] #[2, 4],
@@ -131,6 +131,7 @@ if KFold == True:
         accuracies = [] # test accuracies
         times = []
         for subject in subjects:
+            print('SUBJECT:', subject)
             path_to_file = os.path.join(os.getcwd(), "experiments", "results_v3", f"bcic2a_{subject}_{f}_{n_classes}_{pool}_kfold_1")
             Path.mkdir(Path(path_to_file), exist_ok=True, parents=True)
             filename = f"{subject}_{levels}_{width}_{neuron1}_{neuron2}_{dropout_0}_{neuron3}_{dropout_1}_{neuron4}_{opt}_{str(round(lrs,4))}_{off}_{wo[0]}_{wo[1]}"
@@ -139,8 +140,6 @@ if KFold == True:
                 print(f"{filename} already exists!")
                 continue
 
-            print('subject:', subject)
-            
             accuracies_per_trial = []
             times_per_trial = []
             for trial in range(6):

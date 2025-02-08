@@ -35,16 +35,6 @@ def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int
             functiondata = dataDHT(eegdata_sliced[block])
         elif transform == 'DFT':
             functiondata = dataDFT(eegdata_sliced[block])
-        elif transform == 'dataDHTflip':
-            functiondata = dataDHTflip(eegdata_sliced[block])
-        elif transform == 'halfDHT':
-            functiondata = dataDHT_half(eegdata_sliced[block])
-        elif transform == 'halfDFT':
-            functiondata = dataDFT_half(eegdata_sliced[block])
-        elif transform == 'symDHT':
-            functiondata = dataDHT_halfsym(eegdata_sliced[block])
-        elif transform == 'symDHTabs':
-            functiondata = dataDHT_halfsym_1(eegdata_sliced[block])
         datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type='sum')
         #print(datapool.shape) #
         grouped.append(datapool)
@@ -68,16 +58,6 @@ def mnist_preprocessing(data, sampling_frequency: int, n_levels: int, band_width
             functiondata = dataDHT(eegdata_sliced[block])
         elif transform == 'DFT':
             functiondata = dataDFT(eegdata_sliced[block])
-        elif transform == 'dataDHTflip':
-            functiondata = dataDHTflip(eegdata_sliced[block])
-        elif transform == 'halfDHT':
-            functiondata = dataDHT_half(eegdata_sliced[block])
-        elif transform == 'halfDFT':
-            functiondata = dataDFT_half(eegdata_sliced[block])
-        elif transform == 'symDHT':
-            functiondata = dataDHT_halfsym(eegdata_sliced[block])
-        elif transform == 'symDHTabs':
-            functiondata = dataDHT_halfsym_1(eegdata_sliced[block])
         datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type='sum')
         #print(datapool.shape) #
         grouped.append(datapool)
