@@ -25,7 +25,7 @@ def get_correct_data(data, label, num_trial=6):
     
     return jnp.concatenate(tx, axis=0), jnp.array(y_data), trial_number
 
-def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int, transform: str, window: int, overlap:int):
+def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int, transform: str, window: int, overlap:int, pooling_type: str):
     dataw = windowing(data, sampling_frequency=sampling_frequency, window=window, overlap=overlap)
     eegdata_sliced = dataslicing(data=dataw, levels=n_levels)
     #print(len(eegdata_sliced)) #21
@@ -35,7 +35,7 @@ def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int
             functiondata = dataDHT(eegdata_sliced[block])
         elif transform == 'DFT':
             functiondata = dataDFT(eegdata_sliced[block])
-        datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type='sum')
+        datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type=pooling_type)
         #print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)
@@ -48,7 +48,7 @@ def dataprocessing(data, sampling_frequency: int, n_levels: int, band_width: int
     
     return tx, mapped_labels, trial_number #(144, 13, 500), (144,)
 
-def mnist_preprocessing(data, sampling_frequency: int, n_levels: int, band_width: int, transform: str, window: int, overlap: int):
+def mnist_preprocessing(data, sampling_frequency: int, n_levels: int, band_width: int, transform: str, window: int, overlap: int, pooling_type: str):
     dataw = windowing(data, sampling_frequency=sampling_frequency, window=window, overlap=overlap)
     eegdata_sliced = dataslicing(data=dataw, levels=n_levels)
     #print(len(eegdata_sliced)) #21
@@ -58,7 +58,7 @@ def mnist_preprocessing(data, sampling_frequency: int, n_levels: int, band_width
             functiondata = dataDHT(eegdata_sliced[block])
         elif transform == 'DFT':
             functiondata = dataDFT(eegdata_sliced[block])
-        datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type='sum')
+        datapool = datapooling(functiondata, axis=2, width=band_width, pooling_type=pooling_type)
         #print(datapool.shape) #
         grouped.append(datapool)
     groupeddata = jnp.concatenate(grouped, axis=2)

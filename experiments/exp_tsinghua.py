@@ -97,7 +97,7 @@ if KFold == True:
     dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
     freq_means = [2.0, 1.0, 0.0]
     freq_stds = [0.1, 0.01, 0.001]
-    pooling = ['Sum', 'Mean', 'Max']
+    pooling = ['Mean', 'Max'] #'Sum'
 
 
     results = {
