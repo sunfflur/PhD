@@ -97,7 +97,7 @@ if KFold == True:
     dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
     freq_means = [2.0, 1.0, 0.0]
     freq_stds = [0.1, 0.01, 0.001]
-    pooling = ['Sum']
+    pooling = ['Sum', 'Mean', 'Max']
 
 
     results = {
@@ -185,13 +185,14 @@ if KFold == True:
                     datapath, sel_electrodes, stimulif, subject, validation_set=True,
                     n_levels = levels, band_width=width, transform = f, sec_off = off, 
                     split_test=test_trial, split_val=[trial], split_train=train_trials, 
-                    window=wo[0], overlap=wo[1], n_classes=n_classes)
+                    window=wo[0], overlap=wo[1], n_classes=n_classes, pooling_type=pool)
                 
                 print("data_shape:", x_train.shape)
                 print("width:", width)
                 print("n_levels:", levels)
                 print("sec_off:", off)
                 print("window and overlap:", wo[0], wo[1])
+                print("pooling type:", pool)
 
                 class FreqLayer(nn.Module):
                     features: int
@@ -537,7 +538,6 @@ if KFold == True:
                 'Time': str(f"{total_time:.2f}"),
                 'Params': str(total_params)
             }
-            
             df_cfg = pd.DataFrame.from_dict(data, orient="index").transpose()
             df_cfg.to_csv(save_file_name)
 

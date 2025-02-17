@@ -43,7 +43,8 @@ def get_data(datapath, sel_electrodes, stimulif, subjects, validation_set=True, 
         band_width=kwargs.get("band_width", 1),
         transform=kwargs.get("transform", "DHT"),
         window=kwargs.get("window", 2),
-        overlap=kwargs.get("overlap", 0)        
+        overlap=kwargs.get("overlap", 0),
+        pooling_type=kwargs.get("pooling_type", "Sum")        
     )
 
     """ 

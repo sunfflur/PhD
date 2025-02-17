@@ -16,12 +16,11 @@ def create_square(size=None, radius=None, width=None):
     _Frequency Pooling_
 
     Here we perform the frequency pooling stage, wich means the data is grouped according to the frequency band width chosen.
-    The minimun value here is 1.
+    The minimun value here is 1. 
+
+    The pooling type can be sum, mean or max.
         
 """
-
-#data = np.asarray([[10, 9, 8, 7, 6, 5, 6, 7, 8, 9, 10]]).T
-#print("data", data.shape)
 
 def datapooling(data, axis, width, pooling_type):
     size = data.shape[2]
@@ -29,21 +28,14 @@ def datapooling(data, axis, width, pooling_type):
     for r in range(width, (size//2)+1, width):
       ring1d = create_square(size, r, width).reshape(1,1,data.shape[2],1)
       mult = jnp.multiply(ring1d, data)
-      if pooling_type == 'sum':
-        data_pool = jnp.sum(mult, axis=axis) #keepdims=True
+      if pooling_type == 'Sum':
+        data_pool = jnp.sum(mult, axis=axis) 
+      elif pooling_type == 'Mean':
+        data_pool = jnp.mean(mult, axis=axis)
+      elif pooling_type == 'Max':
+        data_pool = jnp.mean(mult, axis=axis)
       p.append(data_pool)
     return jnp.stack(p, axis=axis)
-
-
-
-
-
-
-
-
-
-
-
 
 
 
