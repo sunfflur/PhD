@@ -193,6 +193,7 @@ if KFold == True:
                 print("sec_off:", off)
                 print("window and overlap:", wo[0], wo[1])
                 print("pooling type:", pool)
+                
 
                 class FreqLayer(nn.Module):
                     features: int

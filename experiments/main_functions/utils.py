@@ -30,13 +30,6 @@ def NormalizeData(X, min=0, max=1, axis=2):
     max_vals = jnp.max(X, axis=axis, keepdims=True)
     X_std = jnp.divide(X-min_vals,max_vals - min_vals)
     X_scaled = X_std * (max-min) + min
-    #X_std = (X - jnp.min(X,axis=axis).reshape(X.shape[0],X.shape[1],1,X.shape[-1])) / (jnp.max(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]) - jnp.min(X,axis=2).reshape(X.shape[0],X.shape[1],1,X.shape[-1]))
-    #X_std = X - jnp.min(X, axis=axis)
-    #X_scaled = X_std * (max - min) + min
-    #min_vals = np.min(X, axis=axis)
-    #max_vals = np.max(X, axis=axis)
-    #normalized_data = (X - min_vals) / (max_vals - min_vals)
-    #return normalized_data
     return X_scaled
 
 def NormalizeData_(data):

@@ -17,7 +17,6 @@ def dataslicing(data, levels: int):
 
   slices = []
   for nivel in range(0,niveis):
-    print('nivel:', nivel)
     blocos = 4**nivel
     w = N//blocos
     for b in range(w, N+1, w):

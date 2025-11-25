@@ -4,14 +4,14 @@ import numpy as np
 import pandas as pd
 import jax.numpy as jnp
 from scipy.io import loadmat,savemat
-from sklearn.model_selection import train_test_split
-import py7zr
-from main_functions.utils import NormalizeData, to_categorical
+#from sklearn.model_selection import train_test_split
+#import py7zr
+from main_functions.utils import to_categorical
 from main_functions.DHT import dataDHT
 np.int = int
 np.bool = bool
 np.object = object
-from braindecode.datasets import BCICompetitionIVDataset4, BNCI2014001
+from braindecode.datasets import BNCI2014001
 from braindecode.preprocessing import create_windows_from_events
 
 seed=11
@@ -214,3 +214,37 @@ def BCIC_dataloader(subject, trial_start_offset_seconds, trial_stop_offset_secon
   y_test = to_categorical(test_set.get_metadata().target.values, n_classes=4)
   
   return x_train, x_test, y_train, y_test
+
+def MotionSense_dataloader(path):
+
+  # Get path for standardized data
+  train_path = path + 'train.csv'
+  val_path = path + 'validation.csv'
+  test_path = path + 'test.csv'
+
+  # Read standardized data
+  train_data = pd.read_csv(train_path)
+  validation_data = pd.read_csv(val_path)
+  test_data = pd.read_csv(test_path)
+
+  # Filter accel and gyro attributes for training
+  att = ('accel', 'gyro')
+  filtered_train = [col for col in train_data.columns if col.startswith(att)]
+  train_attributes = train_data[filtered_train]
+  train_attributes_array = np.array(train_attributes).reshape(train_attributes.shape[0], 6, 60, 1)
+  train_labels = to_categorical(train_data['standard activity code'].values, n_classes=6)
+
+
+  # Filter accel and gyro attributes for validation
+  filtered_val = [col for col in validation_data.columns if col.startswith(att)]
+  val_attributes = validation_data[filtered_val]
+  val_attributes_array = np.array(val_attributes).reshape(val_attributes.shape[0], 6, 60, 1)
+  val_labels = to_categorical(validation_data['standard activity code'].values, n_classes=6)
+
+  # Filter accel and gyro attributes for testing
+  filtered_test = [col for col in test_data.columns if col.startswith(att)]
+  test_attributes = test_data[filtered_test]
+  test_attributes_array = np.array(test_attributes).reshape(test_attributes.shape[0], 6, 60, 1)
+  test_labels = to_categorical(test_data['standard activity code'].values, n_classes=6)
+
+  return train_attributes_array, train_labels, val_attributes_array, val_labels, test_attributes_array, test_labels

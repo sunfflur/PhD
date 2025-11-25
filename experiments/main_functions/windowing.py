@@ -18,13 +18,13 @@ def windowing(data, sampling_frequency,  window, overlap):
     #t = jnp.arange(0,N) / sampling_frequency # 0 to 6 s
    
     num_windows = int((N - (window*sampling_frequency)) // (window*sampling_frequency - overlap*sampling_frequency) + 1)
-    print(num_windows)
+    #print(num_windows)
     windows = []
 
     for i in range(num_windows): # janelas
         start = i * (window*sampling_frequency - overlap*sampling_frequency)
         end = start + window*sampling_frequency
-        print(start, end)
+        #print(start, end)
         sample = data[:, :, int(start):int(end), :]
         windows.append(sample)
             

@@ -66,7 +66,8 @@ if KFold == True:
     dropout_taxes = [[0.2, 0.2], [0.5, 0.5], [0.3, 0.5], [0.6, 0.2], [0.30, 0.15]]
     freq_means = [2.0, 1.0, 0.0]
     freq_stds = [0.1, 0.01, 0.001]
-    pooling = ['Sum']
+    #pooling = ['Sum']
+    pooling = ['Mean', 'Max'] #'Sum'
 
     results = {
         'Function': [],
@@ -157,9 +158,11 @@ if KFold == True:
                                                                           overlap=wo[1],
                                                                           validation_set=True,
                                                                           n_trials=6,
-                                                                          val_trial=trial)
+                                                                          val_trial=trial,
+                                                                          pooling_type=pool)
 
-
+                print("pooling type:", pool)
+                
                 class FreqLayer(nn.Module):
                     features: int
                     # kernel_init: Callable = nn.initializers.normal()

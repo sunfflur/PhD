@@ -1,0 +1,2 @@
+,Function,Epochs,Batch_Size,Pooling,Dropout,FreqMean,FreqStd,Time_Off,Window,Overlap,Levels,Band_Width,Neuron_Configuration,Optimizer,Learning_Rate,Val_Accuracy,Time,Params
+0,DFT,500,64,Max,"(0.3, 0.5)",0.0,0.01,0.0,3,0,1,2,"(1, 4, 8, 6)",opt4,0.01,0.7266,39.81,548
